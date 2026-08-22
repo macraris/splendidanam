@@ -1,0 +1,594 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parte, parte, tutto — il triangolo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg-1:#F2EEFB; --bg-2:#E4DCF5; --card:#FFFFFF;
+  --ink:#2A1B45; --ink-2:#6E5F8C;
+  --violet:#6B3FA0; --violet-soft:#EDE4FA;
+  --whole:#E09B2D; --whole-soft:#FDF0D8;
+  --part:#2A9D8F; --part-soft:#DFF3F0;
+  --wrong:#DD5B4A;
+  --display:'Sora', ui-sans-serif, system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--body); color:var(--ink); min-height:100%;
+  background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); background-attachment:fixed;
+  display:flex; justify-content:center; padding:16px 14px 34px}
+#app{width:100%; max-width:620px}
+
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(20px,4.8vw,27px); margin:0; letter-spacing:-.6px}
+.sub{font-size:12.5px; font-weight:800; color:var(--ink-2); margin:3px 0 0}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{background:var(--card); border:1.5px solid rgba(42,27,69,.18); border-radius:9px;
+  padding:5px 10px; font-size:11.5px; font-weight:800}
+.chip b{font-family:var(--display); font-size:14px; color:var(--violet); margin-left:3px}
+.chip.hot{background:var(--whole); color:#fff; border-color:var(--whole)}
+.chip.hot b{color:#fff}
+
+.bar{display:flex; gap:8px; align-items:center; margin:13px 0 10px; flex-wrap:wrap}
+.bar-label{font-family:var(--display); font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--ink-2)}
+.seg{display:flex; border:2px solid var(--ink); border-radius:10px; overflow:hidden; background:var(--card)}
+.seg button{font-family:var(--body); font-weight:800; font-size:11.5px; padding:7px 12px; border:none;
+  background:transparent; color:var(--ink); cursor:pointer; border-right:2px solid var(--ink)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--violet); color:#fff}
+
+/* legend */
+.legend{display:flex; gap:14px; justify-content:center; font-size:11px; font-weight:800;
+  letter-spacing:.5px; color:var(--ink-2); margin:2px 0 8px}
+.legend i{display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+.legend .w i{background:var(--whole)} .legend .p i{background:var(--part)}
+
+/* ---- triangle ---- */
+.tribox{background:var(--card); border:2px solid var(--ink); border-radius:16px;
+  box-shadow:0 4px 0 var(--ink); padding:10px 8px 4px}
+svg#tri{display:block; width:100%; height:auto; max-height:230px}
+.tri-shape{fill:var(--violet-soft); stroke:var(--violet); stroke-width:3; stroke-linejoin:round}
+.tri-div{stroke:var(--violet); stroke-width:2.5; opacity:.55}
+.node circle{stroke-width:3}
+.node text{font-family:var(--display); font-weight:700; font-size:26px; text-anchor:middle; dominant-baseline:central}
+.node.whole circle{fill:var(--whole-soft); stroke:var(--whole)}
+.node.whole text{fill:#8A5A05}
+.node.part circle{fill:var(--part-soft); stroke:var(--part)}
+.node.part text{fill:#12594F}
+.node.hidden circle{fill:var(--violet); stroke:var(--ink)}
+.node.hidden text{fill:#fff}
+.node.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(0)}100%{transform:scale(1)}}
+.node.reveal circle{animation:flash .6s ease-out}
+@keyframes flash{0%{fill:var(--violet)}100%{}}
+.node{transform-box:fill-box; transform-origin:center}
+#tri.shake{animation:shake .38s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}60%{transform:translateX(7px)}}
+
+/* ---- prompt / rule ---- */
+#prompt{text-align:center; font-family:var(--display); font-weight:500; font-size:clamp(15px,4vw,19px);
+  min-height:48px; margin:12px 0 8px; line-height:1.4}
+#prompt em{font-style:normal; font-weight:700}
+#prompt .w{color:#8A5A05} #prompt .p{color:#12594F}
+#prompt small{display:block; font-family:var(--body); font-size:12px; font-weight:800; color:var(--ink-2); margin-top:4px}
+
+.rule{background:var(--card); border:2px dashed var(--violet); border-radius:12px; padding:10px 12px;
+  text-align:center; font-family:var(--display); font-weight:500; font-size:clamp(13px,3.4vw,16px);
+  min-height:44px; display:flex; align-items:center; justify-content:center; line-height:1.35}
+.rule b{color:var(--violet)} .rule .w{color:#8A5A05} .rule .p{color:#12594F}
+.rule.blank{border-color:rgba(42,27,69,.18); color:var(--ink-2)}
+
+/* ---- op buttons ---- */
+.ops{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.op{font-family:var(--display); font-weight:700; font-size:30px; padding:16px 0; border:2px solid var(--ink);
+  border-radius:14px; background:var(--card); color:var(--ink); cursor:pointer; box-shadow:0 4px 0 var(--ink)}
+.op small{display:block; font-family:var(--body); font-size:11.5px; font-weight:800; color:var(--ink-2); margin-top:2px}
+.op:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
+.op.good{background:var(--part); border-color:var(--part); color:#fff; box-shadow:0 4px 0 #1B6B60}
+.op.good small{color:rgba(255,255,255,.85)}
+.op.bad{background:var(--wrong); border-color:var(--wrong); color:#fff; box-shadow:0 4px 0 #A63B2E}
+
+/* ---- keypad ---- */
+.pad{display:grid; gap:7px; grid-template-columns:repeat(5,1fr)}
+.key{font-family:var(--display); font-weight:700; font-size:clamp(15px,3.8vw,19px); padding:11px 0;
+  border:2px solid var(--ink); border-radius:10px; background:var(--card); color:var(--ink);
+  cursor:pointer; box-shadow:0 3px 0 var(--ink); transition:transform .07s, box-shadow .07s}
+.key:active,.key.press{transform:translateY(3px); box-shadow:0 0 0 var(--ink)}
+.key:disabled{opacity:.3; cursor:default}
+.key.good{background:var(--part); border-color:var(--part); color:#fff; box-shadow:0 3px 0 #1B6B60}
+.key.bad{background:var(--wrong); border-color:var(--wrong); color:#fff; box-shadow:0 3px 0 #A63B2E}
+.pad.wait,.ops.wait{opacity:.32; pointer-events:none}
+
+/* ---- family mode ---- */
+.fam{display:grid; grid-template-columns:1fr 1fr; gap:9px}
+@media (max-width:460px){.fam{grid-template-columns:1fr}}
+.eqrow{background:var(--card); border:2px solid var(--ink); border-radius:12px; padding:11px 8px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  font-family:var(--display); font-weight:700; font-size:clamp(16px,4.2vw,20px)}
+.eqrow.active{border-color:var(--violet); box-shadow:0 0 0 3px rgba(107,63,160,.2)}
+.eqrow.done{background:var(--part-soft); border-color:var(--part)}
+.eqrow.err{animation:shake .38s; border-color:var(--wrong)}
+.sl{display:inline-flex; align-items:center; justify-content:center; min-width:40px; height:34px;
+  border:2px dashed rgba(42,27,69,.3); border-radius:7px; background:#FAF8FE}
+.sl.on{border-style:solid; border-color:var(--violet); background:#fff}
+.sl.cursor{animation:blink 1.1s ease-in-out infinite}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(107,63,160,.4)}50%{box-shadow:0 0 0 6px rgba(107,63,160,0)}}
+.tray{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+.tile{font-family:var(--display); font-weight:700; font-size:22px; min-width:62px; padding:11px 0;
+  border:2px solid var(--ink); border-radius:12px; cursor:pointer; box-shadow:0 4px 0 var(--ink)}
+.tile.w{background:var(--whole-soft); color:#8A5A05; border-color:var(--whole); box-shadow:0 4px 0 #B37A18}
+.tile.p{background:var(--part-soft); color:#12594F; border-color:var(--part); box-shadow:0 4px 0 #1B6B60}
+.tile:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
+
+/* ---- balance ---- */
+.balance{display:flex; align-items:center; justify-content:center; gap:10px; font-family:var(--display);
+  font-weight:700; font-size:clamp(18px,4.6vw,24px); background:var(--card); border:2px solid var(--ink);
+  border-radius:14px; padding:14px 10px; box-shadow:0 4px 0 var(--ink)}
+.side{display:flex; align-items:center; gap:6px; padding:6px 10px; border-radius:10px; background:var(--violet-soft)}
+.side.lit{background:var(--whole-soft)}
+.eqsign{font-size:26px; color:var(--violet)}
+.bslot{display:inline-flex; align-items:center; justify-content:center; min-width:44px; height:38px;
+  border:2.5px dashed var(--violet); border-radius:8px; background:#fff; color:var(--violet)}
+.bslot.filled{border-style:solid; background:var(--part-soft); color:#12594F}
+
+#msg{text-align:center; font-weight:800; font-size:13.5px; min-height:22px; margin:8px 0 4px; color:var(--ink-2)}
+#msg.good{color:var(--part)} #msg.bad{color:var(--wrong)}
+.tools{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+.tool{font-family:var(--body); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px;
+  border:2px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer}
+.tool:hover{background:var(--ink); color:#fff}
+button:focus-visible{outline:3px solid var(--whole); outline-offset:3px}
+.stack{display:flex; flex-direction:column; gap:11px; margin-top:11px}
+.hide{display:none !important}
+
+/* end */
+#end{position:fixed; inset:0; background:rgba(42,27,69,.9); display:none; align-items:center;
+  justify-content:center; padding:20px; z-index:50}
+#end.show{display:flex}
+.endcard{background:var(--card); border:2.5px solid var(--ink); border-radius:20px; box-shadow:0 8px 0 rgba(0,0,0,.25);
+  padding:26px 24px; text-align:center; max-width:380px; width:100%; animation:pop2 .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop2{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:700; font-size:23px; margin:0 0 6px}
+.tris{font-size:28px; letter-spacing:8px; margin:10px 0}
+.tris span{opacity:.2; display:inline-block; transition:all .35s}
+.tris span.on{opacity:1; transform:scale(1.2)}
+.stats{display:flex; justify-content:center; gap:20px; margin:14px 0 18px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-weight:700; font-size:24px; color:var(--violet)}
+.stat span{font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ink-2)}
+.big{font-family:var(--display); font-weight:700; font-size:17px; padding:12px 26px; border-radius:12px;
+  background:var(--violet); color:#fff; border:2px solid var(--ink); box-shadow:0 4px 0 var(--ink); cursor:pointer}
+.big:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important; animation-iteration-count:1 !important}}
+</style>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>Parte, parte, tutto</h1>
+      <p class="sub">Il numero in alto è il tutto · i due in basso sono le parti</p>
+    </div>
+    <div class="chips">
+      <div class="chip">Punti<b id="score">0</b></div>
+      <div class="chip" id="streakChip">▲<b id="streak">0</b></div>
+      <div class="chip"><b id="qn">1</b>/<span id="qtot">8</span></div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="bar-label">Esercizio</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="tri" class="on">Triangolo</button>
+      <button data-m="fam">Famiglia</button>
+      <button data-m="eq">Numero mancante</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="w"><i></i>tutto</span>
+    <span class="p"><i></i>parti</span>
+  </div>
+
+  <div class="tribox">
+    <svg id="tri" viewBox="0 0 300 210" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <path class="tri-shape" d="M150 12 L288 196 L12 196 Z"/>
+      <line class="tri-div" x1="66" y1="120" x2="234" y2="120"/>
+      <g class="node whole" id="nW" transform="translate(150,72)">
+        <circle r="30"/><text y="1"></text>
+      </g>
+      <g class="node part" id="nA" transform="translate(96,160)">
+        <circle r="29"/><text y="1"></text>
+      </g>
+      <g class="node part" id="nB" transform="translate(204,160)">
+        <circle r="29"/><text y="1"></text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="stack">
+    <div id="prompt"></div>
+    <div class="rule blank" id="rule">La regola comparirà qui.</div>
+
+    <!-- balance (eq mode, star items) -->
+    <div class="balance hide" id="balance">
+      <div class="side" id="sideL"></div>
+      <span class="eqsign">=</span>
+      <div class="side" id="sideR"></div>
+    </div>
+
+    <!-- family shells -->
+    <div class="fam hide" id="fam"></div>
+    <div class="tray hide" id="tray"></div>
+
+    <!-- op choice -->
+    <div class="ops hide" id="ops">
+      <button class="op" data-op="+">+<small>metto insieme</small></button>
+      <button class="op" data-op="−">−<small>tolgo</small></button>
+    </div>
+
+    <!-- keypad -->
+    <div class="pad hide" id="pad"></div>
+
+    <div id="msg"></div>
+    <div class="tools">
+      <button class="tool hide" id="undo">↩ Cancella</button>
+      <button class="tool" id="restart">↻ Ricomincia</button>
+    </div>
+  </div>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">Fatto!</h2>
+    <div class="tris" id="tris"><span>▲</span><span>▲</span><span>▲</span></div>
+    <div class="stats">
+      <div class="stat"><b id="fOk">0</b><span>al primo colpo</span></div>
+      <div class="stat"><b id="fPts">0</b><span>punti</span></div>
+    </div>
+    <button class="big" id="again">Ancora</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let mode='tri', score=0, streak=0, idx=0, clean=0, tries=0, TOTAL=8;
+let cur=null, phase='';
+
+/* sound */
+let actx=null;
+function beep(f,d=.12,type='sine',v=.13,delay=0){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+const yes=()=>{beep(660,.1,'triangle');beep(990,.15,'triangle',.11,.07)};
+const no=()=>beep(180,.2,'sawtooth',.1);
+const ding=()=>[660,880,1175].forEach((f,i)=>beep(f,.28,'triangle',.11,i*.09));
+
+/* ---------- family generator ---------- */
+function newFamily(){
+  const w=11+Math.floor(Math.random()*8);      // 11..18
+  let a=2+Math.floor(Math.random()*8);          // 2..9
+  while(w-a<2||w-a>9) a=2+Math.floor(Math.random()*8);
+  return {w,a,b:w-a};
+}
+
+/* ---------- triangle painting ---------- */
+function paintTri(vals,hidden){
+  const map={W:'nW',A:'nA',B:'nB'};
+  ['W','A','B'].forEach(k=>{
+    const g=$(map[k]);
+    g.classList.remove('hidden','pop','reveal');
+    g.classList.add(k==='W'?'whole':'part');
+    const t=g.querySelector('text');
+    if(hidden===k){ g.classList.add('hidden'); t.textContent='?'; }
+    else if(vals[k]===null||vals[k]===undefined){ g.classList.add('hidden'); t.textContent='?'; }
+    else t.textContent=vals[k];
+  });
+}
+function revealNode(k,val){
+  const g=$({W:'nW',A:'nA',B:'nB'}[k]);
+  g.classList.remove('hidden'); g.classList.add(k==='W'?'whole':'part','pop');
+  g.querySelector('text').textContent=val;
+  setTimeout(()=>g.classList.remove('pop'),500);
+}
+function shakeTri(){ $('tri').classList.add('shake'); setTimeout(()=>$('tri').classList.remove('shake'),380); }
+
+/* ---------- ui helpers ---------- */
+function show(...ids){
+  ['ops','pad','fam','tray','balance','undo'].forEach(i=>$(i).classList.add('hide'));
+  ids.forEach(i=>$(i).classList.remove('hide'));
+}
+function keypad(from,to){
+  const p=$('pad'); p.innerHTML=''; p.classList.remove('wait');
+  for(let n=from;n<=to;n++){
+    const b=document.createElement('button');
+    b.className='key'; b.textContent=n; b.dataset.n=n;
+    b.addEventListener('click',()=>onNumber(n,b));
+    p.appendChild(b);
+  }
+}
+function setRule(html,blank){
+  const r=$('rule'); r.innerHTML=html; r.classList.toggle('blank',!!blank);
+}
+function award(perfect,pts=20){
+  if(perfect){ clean++; streak++; score+=pts; } else { streak=0; score+=Math.round(pts*.4); }
+  $('score').textContent=score; $('streak').textContent=streak;
+  $('streakChip').classList.toggle('hot',streak>=3);
+}
+
+/* =========================================================
+   MODE 1 — TRIANGOLO (copri un angolo)
+   ========================================================= */
+function startTri(){
+  const f=newFamily();
+  $('ops').innerHTML=`<button class="op" data-op="+">+<small>metto insieme</small></button>
+                      <button class="op" data-op="−">−<small>tolgo</small></button>`;
+  const which=['W','A','B'][Math.random()<.34?0:(Math.random()<.5?1:2)];
+  cur={...f,hidden:which,type:'tri'};
+  cur.answer = which==='W'? f.w : which==='A'? f.a : f.b;
+  cur.needOp = which==='W'? '+' : '−';
+  phase='op'; tries=0;
+  paintTri({W:f.w,A:f.a,B:f.b},which);
+  $('prompt').innerHTML = which==='W'
+    ? `Manca il numero <span class="w">in alto</span>.<br>Che operazione ti serve?`
+    : `Manca <span class="p">una parte</span>.<br>Che operazione ti serve?`;
+  setRule('Manca il tutto o una parte?',true);
+  show('ops');
+  $('ops').classList.remove('wait');
+  [...document.querySelectorAll('.op')].forEach(b=>{b.classList.remove('good','bad'); b.disabled=false;});
+}
+function onOp(op,btn){
+  if(phase!=='op') return;
+  if(op===cur.needOp){
+    btn.classList.add('good'); $('ops').classList.add('wait'); yes();
+    setRule(cur.hidden==='W'
+      ? 'Manca il <span class="w">tutto</span>: <b>si sommano le due parti</b>.'
+      : 'Manca una <span class="p">parte</span>: <b>si toglie l\'altra parte dal tutto</b>.');
+    phase='num';
+    const shown = cur.hidden==='W' ? `${cur.a} + ${cur.b}` :
+                  cur.hidden==='A' ? `${cur.w} − ${cur.b}` : `${cur.w} − ${cur.a}`;
+    $('prompt').innerHTML=`Quanto fa <em>${shown}</em>?`;
+    setTimeout(()=>{ show('pad'); keypad(1,20); },600);
+  } else {
+    tries++; btn.classList.add('bad'); btn.disabled=true; no(); shakeTri();
+    $('msg').textContent = cur.hidden==='W'
+      ? 'Guarda: hai le due parti, ti manca il tutto.'
+      : 'Guarda: hai il tutto e una parte sola.';
+    $('msg').className='bad';
+  }
+}
+
+/* =========================================================
+   MODE 2 — FAMIGLIA (le quattro operazioni)
+   ========================================================= */
+let famRows=[], famSlot=0, famRow=0;
+function startFam(){
+  const f=newFamily();
+  cur={...f,type:'fam'};
+  tries=0; famRow=0; famSlot=0;
+  famRows=[{op:'+',v:[null,null,null]},{op:'+',v:[null,null,null]},
+           {op:'−',v:[null,null,null]},{op:'−',v:[null,null,null]}];
+  paintTri({W:f.w,A:f.a,B:f.b},null);
+  $('prompt').innerHTML=`Scrivi le <em>quattro operazioni</em> di questa famiglia.<small>Tocca i numeri: due addizioni e due sottrazioni</small>`;
+  setRule('Le stesse tre cifre, girate in quattro modi.');
+  show('fam','tray','undo');
+  renderFam(); renderTray();
+}
+function renderFam(){
+  const box=$('fam'); box.innerHTML='';
+  famRows.forEach((r,ri)=>{
+    const d=document.createElement('div');
+    d.className='eqrow'+(ri===famRow?' active':'')+(r.done?' done':'');
+    d.id='row'+ri;
+    const slot=i=>`<span class="sl${r.v[i]!==null?' on':''}${ri===famRow&&i===famSlot?' cursor':''}">${r.v[i]!==null?r.v[i]:''}</span>`;
+    d.innerHTML=`${slot(0)} <span>${r.op}</span> ${slot(1)} <span>=</span> ${slot(2)}`;
+    box.appendChild(d);
+  });
+}
+function renderTray(){
+  const t=$('tray'); t.innerHTML='';
+  [[cur.w,'w'],[cur.a,'p'],[cur.b,'p']].forEach(([v,c])=>{
+    const b=document.createElement('button');
+    b.className='tile '+c; b.textContent=v;
+    b.addEventListener('click',()=>famTap(v));
+    t.appendChild(b);
+  });
+}
+function famTap(v){
+  const r=famRows[famRow]; if(!r||r.done) return;
+  r.v[famSlot]=v; famSlot++;
+  beep(520+famSlot*80,.07,'triangle',.08);
+  if(famSlot>2){ checkRow(); } else renderFam();
+}
+function checkRow(){
+  const r=famRows[famRow], [x,y,z]=r.v;
+  const same=(p,q)=>(p[0]===q[0]&&p[1]===q[1])||(p[0]===q[1]&&p[1]===q[0]);
+  let valid = r.op==='+' ? (x+y===z && z===cur.w && same([x,y],[cur.a,cur.b]))
+                         : (x-y===z && x===cur.w && same([y,z],[cur.a,cur.b]));
+  const dup = famRows.some((o,i)=>i!==famRow&&o.done&&o.op===r.op&&o.v[0]===x&&o.v[1]===y);
+  if(valid&&!dup){
+    r.done=true; yes();
+    famRow++; famSlot=0; renderFam();
+    if(famRows.every(o=>o.done)){
+      award(tries===0,25); ding();
+      $('msg').textContent = tries===0? 'Famiglia completa!' : 'Completata.';
+      $('msg').className='good';
+      setRule('Un solo triangolo, <b>quattro operazioni</b>. Se sai una, sai tutte.');
+      idx++; setTimeout(next,2200);
+    } else {
+      $('msg').textContent=''; $('msg').className='';
+    }
+  } else {
+    tries++; no();
+    const el=$('row'+famRow); el.classList.add('err'); setTimeout(()=>el.classList.remove('err'),400);
+    $('msg').textContent = dup? 'Questa l\'hai già scritta: cambia l\'ordine.'
+      : r.op==='+' ? 'Nell\'addizione il tutto sta dopo l\'uguale.'
+                   : 'Nella sottrazione si parte dal tutto.';
+    $('msg').className='bad';
+    r.v=[null,null,null]; famSlot=0; renderFam();
+  }
+}
+
+/* =========================================================
+   MODE 3 — NUMERO MANCANTE
+   ========================================================= */
+const TEMPLATES=[
+  {k:'part', f:(w,a,b)=>({txt:`${a} + ☐ = ${w}`,ans:b})},
+  {k:'part', f:(w,a,b)=>({txt:`☐ + ${b} = ${w}`,ans:a})},
+  {k:'part', f:(w,a,b)=>({txt:`${w} − ☐ = ${b}`,ans:a})},
+  {k:'whole',f:(w,a,b)=>({txt:`☐ − ${a} = ${b}`,ans:w})},
+  {k:'part', f:(w,a,b)=>({txt:`${w} = ${a} + ☐`,ans:b})},
+  {k:'part', f:(w,a,b)=>({txt:`☐ = ${w} − ${b}`,ans:a})},
+  {k:'whole',f:(w,a,b)=>({txt:`${a} + ${b} = ☐`,ans:w})}
+];
+function startEq(){
+  const f=newFamily();
+  const star = Math.random()<.22;
+  if(star){
+    const c=2+Math.floor(Math.random()*Math.min(7,f.w-3));
+    cur={type:'bal',w:f.w,a:f.a,b:f.b,c,ans:f.w-c,step:0};
+    tries=0; phase='balL';
+    paintTri({W:null,A:null,B:null},null);
+    $('sideL').innerHTML=`<span>${f.a}</span><span>+</span><span>${f.b}</span>`;
+    $('sideR').innerHTML=`<span class="bslot" id="bs">?</span><span>+</span><span>${c}</span>`;
+    $('sideL').classList.add('lit'); $('sideR').classList.remove('lit');
+    $('prompt').innerHTML=`⭐ I due lati devono <em>pesare uguale</em>.<br>Quanto vale il lato <em>sinistro</em>?`;
+    setRule('L\'uguale non vuol dire «scrivi qui»: vuol dire <b>stesso valore</b>.');
+    show('balance','pad'); keypad(1,20);
+    return;
+  }
+  const t=TEMPLATES[Math.floor(Math.random()*TEMPLATES.length)];
+  const q=t.f(f.w,f.a,f.b);
+  cur={type:'eq',...f,kind:t.k,txt:q.txt,ans:q.ans};
+  tries=0; phase='kind';
+  if(t.k==='whole') paintTri({W:null,A:f.a,B:f.b},'W');
+  else paintTri({W:f.w,A:q.ans===f.a?null:f.a,B:q.ans===f.b?null:f.b}, q.ans===f.a?'A':'B');
+  $('prompt').innerHTML=`<em style="font-size:1.25em">${q.txt}</em><br><small>Il quadratino è una parte o il tutto?</small>`;
+  setRule('Prima decidi <b>che cos\'è</b>, poi calcola.',true);
+  show('ops');
+  const ops=$('ops'); ops.classList.remove('wait');
+  ops.innerHTML=`<button class="op" data-kind="part">parte<small>si toglie</small></button>
+                 <button class="op" data-kind="whole">tutto<small>si somma</small></button>`;
+  [...ops.children].forEach(b=>b.addEventListener('click',()=>onKind(b.dataset.kind,b)));
+}
+function onKind(k,btn){
+  if(phase!=='kind') return;
+  if(k===cur.kind){
+    btn.classList.add('good'); $('ops').classList.add('wait'); yes();
+    setRule(k==='whole'
+      ? 'È il <span class="w">tutto</span>: <b>sommo le due parti</b>.'
+      : 'È una <span class="p">parte</span>: <b>tolgo l\'altra parte dal tutto</b>.');
+    phase='num';
+    $('prompt').innerHTML=`<em style="font-size:1.25em">${cur.txt}</em><br><small>Adesso scrivi il numero</small>`;
+    setTimeout(()=>{ show('pad'); keypad(1,20); },550);
+  } else {
+    tries++; btn.classList.add('bad'); btn.disabled=true; no(); shakeTri();
+    $('msg').textContent='Guarda il triangolo: quale angolo è vuoto?'; $('msg').className='bad';
+  }
+}
+
+/* ---------- number entry ---------- */
+function onNumber(n,btn){
+  if(cur.type==='bal') return balNumber(n,btn);
+  if(phase!=='num') return;
+  if(n===cur.ans){
+    btn.classList.add('good'); $('pad').classList.add('wait'); yes(); ding();
+    const k = cur.type==='tri'? cur.hidden : (cur.kind==='whole'?'W':(cur.ans===cur.a?'A':'B'));
+    revealNode(k,n);
+    award(tries===0);
+    $('msg').textContent = tries===0? ['Esatto!','Perfetto!','Giusto al primo colpo!'][Math.floor(Math.random()*3)] : 'Giusto.';
+    $('msg').className='good';
+    idx++; setTimeout(next,1800);
+  } else {
+    tries++; btn.classList.add('bad'); btn.disabled=true; no(); shakeTri();
+    $('msg').textContent='Riprova guardando il triangolo.'; $('msg').className='bad';
+  }
+}
+function balNumber(n,btn){
+  if(phase==='balL'){
+    if(n===cur.w){
+      btn.classList.add('good'); yes();
+      $('sideL').innerHTML=`<span>${cur.a}</span><span>+</span><span>${cur.b}</span><span style="color:var(--ink-2)">=</span><span style="color:#8A5A05">${cur.w}</span>`;
+      $('sideR').classList.add('lit');
+      phase='balR';
+      $('prompt').innerHTML=`Il lato sinistro pesa <em>${cur.w}</em>.<br>Quanto serve a destra, insieme a <em>${cur.c}</em>?`;
+      setRule(`Anche a destra deve venire <b>${cur.w}</b>: ${cur.w} − ${cur.c} = ?`);
+      setTimeout(()=>keypad(1,20),450);
+    } else { tries++; btn.classList.add('bad'); btn.disabled=true; no();
+      $('msg').textContent='Somma prima i due numeri di sinistra.'; $('msg').className='bad'; }
+  } else {
+    if(n===cur.ans){
+      btn.classList.add('good'); $('pad').classList.add('wait'); yes(); ding();
+      $('bs').textContent=n; $('bs').classList.add('filled');
+      award(tries===0,25);
+      $('msg').textContent='I due lati pesano uguale!'; $('msg').className='good';
+      idx++; setTimeout(next,2000);
+    } else { tries++; btn.classList.add('bad'); btn.disabled=true; no();
+      $('msg').textContent=`Deve fare ${cur.w} anche a destra.`; $('msg').className='bad'; }
+  }
+}
+
+/* ---------- flow ---------- */
+function next(){
+  if(idx>=TOTAL){ finish(); return; }
+  $('qn').textContent=idx+1;
+  $('msg').textContent=''; $('msg').className='';
+  if(mode==='tri') startTri();
+  else if(mode==='fam') startFam();
+  else startEq();
+}
+function finish(){
+  const t = clean>=TOTAL-1?3 : clean>=TOTAL-3?2 : 1;
+  $('fOk').textContent=clean+'/'+TOTAL; $('fPts').textContent=score;
+  $('endTitle').textContent = t===3?'Triangolo padroneggiato!' : t===2?'Ci siamo quasi!' : 'Buon lavoro';
+  const row=$('tris').children; [...row].forEach(s=>s.classList.remove('on'));
+  for(let i=0;i<t;i++) setTimeout(()=>{row[i].classList.add('on'); beep(600+i*200,.25,'triangle',.12);},350+i*260);
+  $('end').classList.add('show');
+}
+
+/* ---------- controls ---------- */
+$('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('modeSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.m;
+  TOTAL = mode==='fam'?5:8; $('qtot').textContent=TOTAL;
+  reset();
+});
+$('ops').addEventListener('click',e=>{
+  const b=e.target.closest('.op'); if(!b||!b.dataset.op) return;
+  onOp(b.dataset.op,b);
+});
+$('undo').addEventListener('click',()=>{
+  if(mode!=='fam') return;
+  const r=famRows[famRow]; if(!r||r.done) return;
+  if(famSlot>0){ famSlot--; r.v[famSlot]=null; renderFam(); }
+});
+$('restart').addEventListener('click',reset);
+$('again').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{
+  const n=parseInt(e.key,10); if(isNaN(n)) return;
+  const b=[...document.querySelectorAll('.key')].find(k=>+k.dataset.n===n&&!k.disabled);
+  if(b && !$('pad').classList.contains('wait') && !$('pad').classList.contains('hide')){
+    b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); onNumber(n,b);
+  }
+});
+
+function reset(){
+  score=0; streak=0; idx=0; clean=0;
+  $('score').textContent=0; $('streak').textContent=0;
+  $('streakChip').classList.remove('hot');
+  $('end').classList.remove('show');
+  next();
+}
+reset();
+</script>
