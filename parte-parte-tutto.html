@@ -275,11 +275,20 @@ const no=()=>beep(180,.2,'sawtooth',.1);
 const ding=()=>[660,880,1175].forEach((f,i)=>beep(f,.28,'triangle',.11,i*.09));
 
 /* ---------- family generator ---------- */
-function newFamily(){
-  const w=11+Math.floor(Math.random()*8);      // 11..18
-  let a=2+Math.floor(Math.random()*8);          // 2..9
-  while(w-a<2||w-a>9) a=2+Math.floor(Math.random()*8);
-  return {w,a,b:w-a};
+/* distinct=true esclude le coppie con parti uguali (es. 6+6=12):
+   in "Famiglia" darebbero due righe identiche e in "Numero mancante"
+   nasconderebbero due angoli invece di uno. */
+function newFamily(distinct){
+  const pool=[];
+  for(let w=11;w<=18;w++){
+    for(let a=2;a<=9;a++){
+      const b=w-a;
+      if(b<2||b>9) continue;
+      if(distinct&&a===b) continue;
+      pool.push({w,a,b});
+    }
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 
 /* ---------- triangle painting ---------- */
@@ -318,7 +327,8 @@ function keypad(from,to){
   }
 }
 function setRule(html,blank){
-  const r=$('rule'); r.innerHTML=html; r.classList.toggle('blank',!!blank);
+  /* il contenitore è flex: senza un unico figlio gli spazi fra i tag vengono mangiati */
+  const r=$('rule'); r.innerHTML='<span>'+html+'</span>'; r.classList.toggle('blank',!!blank);
 }
 function award(perfect,pts=20){
   if(perfect){ clean++; streak++; score+=pts; } else { streak=0; score+=Math.round(pts*.4); }
@@ -335,7 +345,7 @@ function startTri(){
                       <button class="op" data-op="−">−<small>tolgo</small></button>`;
   const which=['W','A','B'][Math.random()<.34?0:(Math.random()<.5?1:2)];
   cur={...f,hidden:which,type:'tri'};
-  cur.answer = which==='W'? f.w : which==='A'? f.a : f.b;
+  cur.ans = which==='W'? f.w : which==='A'? f.a : f.b;
   cur.needOp = which==='W'? '+' : '−';
   phase='op'; tries=0;
   paintTri({W:f.w,A:f.a,B:f.b},which);
@@ -351,6 +361,7 @@ function onOp(op,btn){
   if(phase!=='op') return;
   if(op===cur.needOp){
     btn.classList.add('good'); $('ops').classList.add('wait'); yes();
+    $('msg').textContent=''; $('msg').className='';
     setRule(cur.hidden==='W'
       ? 'Manca il <span class="w">tutto</span>: <b>si sommano le due parti</b>.'
       : 'Manca una <span class="p">parte</span>: <b>si toglie l\'altra parte dal tutto</b>.');
@@ -373,7 +384,7 @@ function onOp(op,btn){
    ========================================================= */
 let famRows=[], famSlot=0, famRow=0;
 function startFam(){
-  const f=newFamily();
+  const f=newFamily(true);
   cur={...f,type:'fam'};
   tries=0; famRow=0; famSlot=0;
   famRows=[{op:'+',v:[null,null,null]},{op:'+',v:[null,null,null]},
@@ -452,7 +463,7 @@ const TEMPLATES=[
   {k:'whole',f:(w,a,b)=>({txt:`${a} + ${b} = ☐`,ans:w})}
 ];
 function startEq(){
-  const f=newFamily();
+  const f=newFamily(true);
   const star = Math.random()<.22;
   if(star){
     const c=2+Math.floor(Math.random()*Math.min(7,f.w-3));
@@ -540,6 +551,7 @@ function balNumber(n,btn){
 
 /* ---------- flow ---------- */
 function next(){
+  kbBuf=''; if(kbTimer){ clearTimeout(kbTimer); kbTimer=null; }
   if(idx>=TOTAL){ finish(); return; }
   $('qn').textContent=idx+1;
   $('msg').textContent=''; $('msg').className='';
@@ -575,12 +587,31 @@ $('undo').addEventListener('click',()=>{
 });
 $('restart').addEventListener('click',reset);
 $('again').addEventListener('click',reset);
-document.addEventListener('keydown',e=>{
-  const n=parseInt(e.key,10); if(isNaN(n)) return;
+/* tastiera: i numeri arrivano a 20, quindi le cifre vanno accumulate.
+   Con "1" o "2" si aspetta un attimo la seconda cifra (Invio conferma subito). */
+let kbBuf='', kbTimer=null;
+function padBusy(){ return $('pad').classList.contains('wait')||$('pad').classList.contains('hide'); }
+function pressKey(n){
+  if(padBusy()) return;
   const b=[...document.querySelectorAll('.key')].find(k=>+k.dataset.n===n&&!k.disabled);
-  if(b && !$('pad').classList.contains('wait') && !$('pad').classList.contains('hide')){
-    b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); onNumber(n,b);
-  }
+  if(!b) return;
+  b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); onNumber(n,b);
+}
+function kbFlush(){
+  if(kbTimer){ clearTimeout(kbTimer); kbTimer=null; }
+  const n=parseInt(kbBuf,10); kbBuf='';
+  if(!isNaN(n)) pressKey(n);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){ if(kbBuf) kbFlush(); return; }
+  if(e.key==='Backspace'||e.key==='Escape'){ kbBuf=''; if(kbTimer){clearTimeout(kbTimer);kbTimer=null;} return; }
+  if(!/^[0-9]$/.test(e.key)) return;
+  if(padBusy()) return;
+  if(kbTimer){ clearTimeout(kbTimer); kbTimer=null; }
+  kbBuf+=e.key;
+  const n=parseInt(kbBuf,10);
+  if(kbBuf.length>=2||n>2){ kbFlush(); }        // 3..9 sono già definitivi
+  else { kbTimer=setTimeout(kbFlush,450); }     // 1 o 2 possono diventare 10..20
 });
 
 function reset(){
