@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Splendida Nam — I giochi di matematica</title>
+<meta name="description" content="I giochi di matematica di Nam: amici del 10, doppi, ponti e catene.">
+<meta name="theme-color" content="#EFEBE1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#EFEBE1; --paper-2:#E4DFD2; --card:#FFFFFF;
+  --ink:#16324F; --ink-2:#5B7186; --rule:#CBC4B4;
+  --coral:#F2653F; --mint:#149B7C; --violet:#7C5CFF;
+  --pink:#F45D9E; --amber:#F5A524; --sky:#3D9BE9; --lime:#66A80F;
+  --display:'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; font-family:var(--body); color:var(--ink); min-height:100vh;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 27px,rgba(22,50,79,.045) 27px 28px),
+    linear-gradient(180deg,var(--paper),var(--paper-2));
+  padding:20px 16px 40px;
+  display:flex; justify-content:center;
+  overflow-x:hidden;
+}
+#app{width:100%; max-width:760px; position:relative; z-index:1}
+
+/* ---------- decorazioni ---------- */
+.blobs{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+.blob{position:absolute; border-radius:50%; filter:blur(48px); opacity:.30}
+.b1{width:340px;height:340px; background:var(--pink);  top:-120px; left:-110px}
+.b2{width:300px;height:300px; background:var(--sky);   top:22%;    right:-130px}
+.b3{width:320px;height:320px; background:var(--amber); bottom:-140px; left:12%}
+
+/* ---------- header ---------- */
+.top{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:9px; background:var(--card); border:2.5px solid var(--ink);
+  border-radius:999px; padding:6px 14px 6px 8px; box-shadow:0 3px 0 var(--ink)}
+.brand .dot{width:24px;height:24px;border-radius:50%; background:var(--coral); border:2.5px solid var(--ink);
+  display:grid; place-items:center; font-size:12px}
+.brand span{font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase}
+.today{font-size:11.5px; font-weight:800; letter-spacing:1.1px; text-transform:uppercase; color:var(--ink-2)}
+
+.langsw{display:inline-flex; align-items:center; gap:6px; background:var(--card); border:2.5px solid var(--ink);
+  border-radius:999px; padding:5px 12px; box-shadow:0 3px 0 var(--ink); text-decoration:none; color:inherit;
+  font-size:11.5px; font-weight:800; letter-spacing:.7px; text-transform:uppercase;
+  transition:transform .16s ease, box-shadow .16s ease}
+.langsw:hover,.langsw:focus-visible{transform:translateY(-2px); box-shadow:0 5px 0 var(--ink); outline:none}
+.langsw:active{transform:translateY(1px); box-shadow:0 2px 0 var(--ink)}
+
+/* ---------- hero ---------- */
+.hero{margin:26px 0 8px; text-align:center; position:relative}
+.hello{font-family:var(--display); font-weight:800; letter-spacing:-1.5px; margin:0;
+  font-size:clamp(38px,11vw,74px); line-height:.96}
+.hello .name{
+  position:relative; display:inline-block; padding:0 .06em;
+  background:linear-gradient(180deg,transparent 62%, rgba(244,93,158,.42) 62%);
+}
+.hello .name::after{content:'\2728'; position:absolute; top:-.32em; right:-.55em; font-size:.34em;
+  animation:twinkle 2.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0);opacity:1}50%{transform:scale(1.25) rotate(14deg);opacity:.65}}
+.tagline{font-size:15px; font-weight:800; color:var(--ink-2); margin:12px auto 0; max-width:34ch; line-height:1.5}
+
+.stats{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:18px 0 4px}
+.stat{background:var(--card); border:2.5px solid var(--ink); border-radius:14px; padding:7px 13px;
+  box-shadow:0 3px 0 var(--ink); display:flex; align-items:baseline; gap:6px}
+.stat b{font-family:var(--display); font-size:17px}
+.stat i{font-style:normal; font-size:11.5px; font-weight:800; color:var(--ink-2);
+  letter-spacing:.7px; text-transform:uppercase}
+
+/* ---------- sezione ---------- */
+.sec{display:flex; align-items:center; gap:12px; margin:34px 0 16px}
+.sec h2{font-family:var(--display); font-weight:800; font-size:19px; margin:0; letter-spacing:-.3px; white-space:nowrap}
+.sec .line{flex:1; height:2.5px; background:var(--rule); border-radius:2px}
+
+/* ---------- griglia ---------- */
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px}
+.card{
+  --accent:var(--coral);
+  position:relative; display:flex; flex-direction:column; gap:10px;
+  background:var(--card); border:3px solid var(--ink); border-radius:20px;
+  padding:16px 15px 14px; text-decoration:none; color:inherit;
+  box-shadow:0 6px 0 var(--ink);
+  transition:transform .16s ease, box-shadow .16s ease;
+  overflow:hidden;
+}
+.card::before{content:''; position:absolute; top:-46px; right:-46px; width:120px; height:120px;
+  border-radius:50%; background:var(--accent); opacity:.16}
+.card:hover,.card:focus-visible{transform:translateY(-4px); box-shadow:0 10px 0 var(--ink); outline:none}
+.card:active{transform:translateY(2px); box-shadow:0 3px 0 var(--ink)}
+.card:focus-visible{border-color:var(--accent)}
+
+.head{display:flex; align-items:center; gap:11px; position:relative}
+.ico{flex:none; width:46px; height:46px; border-radius:14px; background:var(--accent);
+  border:2.5px solid var(--ink); display:grid; place-items:center; box-shadow:0 3px 0 var(--ink)}
+.ico svg{width:26px; height:26px; display:block}
+.num{margin-left:auto; font-family:var(--display); font-weight:800; font-size:13px;
+  color:var(--ink-2); background:var(--paper); border:2px solid var(--rule);
+  border-radius:999px; padding:2px 9px}
+.card h3{font-family:var(--display); font-weight:800; font-size:18px; margin:0; letter-spacing:-.4px; line-height:1.15}
+.card p{margin:0; font-size:13px; font-weight:700; color:var(--ink-2); line-height:1.45}
+.go{margin-top:auto; padding-top:8px; display:flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; color:var(--accent)}
+.go svg{width:15px;height:15px; transition:transform .16s ease}
+.card:hover .go svg{transform:translateX(4px)}
+
+/* ---------- footer ---------- */
+footer{margin-top:34px; text-align:center; font-size:12.5px; font-weight:800; color:var(--ink-2)}
+footer .heart{color:var(--pink)}
+
+/* ---------- entrata ---------- */
+.rise{opacity:0; transform:translateY(14px); animation:rise .55s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes rise{to{opacity:1; transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+  .rise{opacity:1; transform:none}
+}
+</style>
+</head>
+<body>
+
+<div class="blobs" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+
+<main id="app">
+
+  <div class="top rise" style="animation-delay:.02s">
+    <div class="brand"><span class="dot">&#127922;</span><span>Giochi di matematica</span></div>
+    <a class="langsw" href="../en/" hreflang="en" lang="en">&#127760; English</a>
+    <div class="today" id="today"></div>
+  </div>
+
+  <section class="hero rise" style="animation-delay:.08s">
+    <h1 class="hello">Ciao,<br><span class="name">Nam</span></h1>
+    <p class="tagline">Sette giochi per diventare velocissima con i numeri fino a 20. Scegli quello di oggi!</p>
+    <div class="stats">
+      <div class="stat"><b>7</b><i>giochi</i></div>
+      <div class="stat"><b>10</b><i>il numero magico</i></div>
+      <div class="stat"><b>&#8734;</b><i>partite</i></div>
+    </div>
+  </section>
+
+  <div class="sec rise" style="animation-delay:.14s">
+    <h2>Scegli il gioco</h2><div class="line"></div>
+  </div>
+
+  <div class="grid">
+
+    <a class="card rise" style="--accent:var(--coral); animation-delay:.18s" href="casa-del-10.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.8V20h13V9.8"/><path d="M10 20v-5h4v5"/></svg></div>
+        <span class="num">01</span>
+      </div>
+      <h3>La casa del 10</h3>
+      <p>Trova le coppie che fanno 10: ogni coppia giusta accende un piano.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--sky); animation-delay:.22s" href="ponte-del-10.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17h20"/><path d="M4 17v-4"/><path d="M20 17v-4"/><path d="M4 13c4-6 12-6 16 0"/><path d="M9 17v-3.2M15 17v-3.2M12 17v-4.2"/></svg></div>
+        <span class="num">02</span>
+      </div>
+      <h3>Il ponte del 10</h3>
+      <p>Il 10 &egrave; la stazione dove tutti i treni si fermano prima di ripartire.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--amber); animation-delay:.26s" href="colpo-docchio.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.8"/></svg></div>
+        <span class="num">03</span>
+      </div>
+      <h3>Colpo d&rsquo;occhio</h3>
+      <p>Il quadro appare per un attimo: guarda e rispondi al volo, senza contare.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--mint); animation-delay:.30s" href="parte-parte-tutto.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.6" r="2.6"/><circle cx="5.4" cy="18" r="2.6"/><circle cx="18.6" cy="18" r="2.6"/><path d="M10.4 6.8 7 15.6M13.6 6.8 17 15.6M8 18h8"/></svg></div>
+        <span class="num">04</span>
+      </div>
+      <h3>Parte, parte, tutto</h3>
+      <p>Il numero in alto &egrave; il tutto, i due in basso sono le parti del triangolo.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--lime); animation-delay:.34s" href="quanto-manca-salita.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h4v-4h5v-4h5V8h4"/><path d="M17 5.5 20.5 8 18 11"/></svg></div>
+        <span class="num">05</span>
+      </div>
+      <h3>Quanto manca?</h3>
+      <p>Non tornare indietro: parti dal piccolo e sali a gradini fino al grande.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--pink); animation-delay:.38s" href="specchio-dei-doppi.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v19" stroke-dasharray="3 3"/><path d="M9 6H4.5v12H9"/><path d="M15 6h4.5v12H15"/></svg></div>
+        <span class="num">06</span>
+      </div>
+      <h3>Lo specchio dei doppi</h3>
+      <p>I doppi a memoria, i vicini si ricavano e le met&agrave; sono il riflesso.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+    <a class="card rise" style="--accent:var(--violet); animation-delay:.42s" href="catene-vero-falso.html">
+      <div class="head">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#16324F" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M13 6.5 14.8 4.7a3.8 3.8 0 0 1 5.4 5.4L18.4 12"/><path d="M11 17.5 9.2 19.3a3.8 3.8 0 0 1-5.4-5.4L5.6 12"/></svg></div>
+        <span class="num">07</span>
+      </div>
+      <h3>Catene e Vero / Falso</h3>
+      <p>Nelle catene si va da sinistra a destra: scrivi sempre il numero di mezzo.</p>
+      <span class="go">Gioca <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
+    </a>
+
+  </div>
+
+  <footer>Fatto con <span class="heart">&hearts;</span> per Nam</footer>
+
+</main>
+
+<script>
+(function () {
+  var h = new Date().getHours();
+  var g = h < 13 ? 'Buongiorno' : (h < 18 ? 'Buon pomeriggio' : 'Buonasera');
+  var d = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('today').textContent = g + ' · ' + d;
+})();
+</script>
+
+</body>
+</html>

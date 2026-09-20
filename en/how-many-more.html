@@ -1,0 +1,452 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How many more? — the climb</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --deep:#0E2C24; --forest:#16443A; --moss:#1E9E76; --mint:#7FE3BC;
+  --mist:#E9F3EE; --paper:#F7FBF8; --ledge:#E8A33C; --ledge-soft:#FFD68F;
+  --coral:#EE6B4D; --dim:#8FB2A5;
+  --display:'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--body); color:var(--mist); min-height:100%;
+  background:linear-gradient(180deg,#0A2019 0%,var(--deep) 30%,var(--forest) 100%);
+  background-attachment:fixed; display:flex; justify-content:center; padding:16px 14px 34px;
+}
+#app{width:100%; max-width:760px}
+
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(21px,5vw,28px); margin:0; letter-spacing:-.5px}
+.sub{font-size:12.5px; font-weight:800; color:var(--dim); margin:3px 0 0}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.09); border:1.5px solid rgba(255,255,255,.2); border-radius:8px;
+  padding:5px 10px; font-size:11.5px; font-weight:800}
+.chip b{font-family:var(--display); font-size:15px; color:var(--mint); margin-left:3px}
+.chip.hot{background:var(--ledge); color:#3A2200; border-color:var(--ledge)}
+.chip.hot b{color:#3A2200}
+
+.bar{display:flex; gap:8px; align-items:center; margin:13px 0 10px; flex-wrap:wrap}
+.bar-label{font-family:var(--display); font-size:11px; letter-spacing:1.8px; text-transform:uppercase; color:var(--dim)}
+.seg{display:flex; border:1.5px solid rgba(255,255,255,.28); border-radius:9px; overflow:hidden}
+.seg button{font-family:var(--body); font-weight:800; font-size:11.5px; padding:6px 12px; border:none;
+  background:transparent; color:var(--mist); cursor:pointer; border-right:1.5px solid rgba(255,255,255,.28)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--mint); color:var(--deep)}
+
+main{display:grid; grid-template-columns:230px 1fr; gap:20px; align-items:start}
+@media (max-width:700px){ main{grid-template-columns:1fr; gap:12px} .climb{order:1} }
+
+/* ---- ladder ---- */
+.climb{background:rgba(0,0,0,.22); border:1.5px solid rgba(255,255,255,.14); border-radius:16px;
+  padding:10px 6px; display:flex; justify-content:center}
+svg#wall{display:block; width:auto; height:clamp(300px,50vh,470px)}
+.rung{stroke:var(--dim); stroke-width:3; stroke-linecap:round; opacity:.5}
+.rung.passed{stroke:var(--mint); opacity:1}
+.rung.ledge{stroke:var(--ledge); stroke-width:6; opacity:1}
+.rope{stroke:rgba(255,255,255,.16); stroke-width:3}
+.rnum{font-family:var(--display); font-weight:500; font-size:15px; fill:var(--dim); text-anchor:end}
+.rnum.ten{fill:var(--ledge); font-weight:700; font-size:18px}
+.rnum.on{fill:var(--mist)}
+#ledgeGlow{opacity:0; transition:opacity .5s} #ledgeGlow.on{opacity:1}
+#climber{transition:transform .75s cubic-bezier(.3,.7,.3,1)}
+#climber.hop{animation:hop .75s ease-in-out}
+@keyframes hop{0%,100%{transform:translateX(0)}50%{transform:translateX(7px)}}
+.bracket{stroke-width:3.5; fill:none; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1}
+.bracket.draw{animation:drawB .6s ease-out forwards}
+@keyframes drawB{to{stroke-dashoffset:0}}
+#br1{stroke:var(--mint)} #br2{stroke:var(--ledge)} #br3{stroke:var(--coral)}
+.blab{font-family:var(--display); font-weight:700; font-size:17px; opacity:0}
+.blab.show{animation:popin .4s ease-out forwards}
+@keyframes popin{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+#bl1{fill:var(--mint)} #bl2{fill:var(--ledge)} #bl3{fill:var(--coral); font-size:20px}
+#flagTop{opacity:0; transform-box:fill-box; transform-origin:bottom left}
+#flagTop.up{animation:flagUp .5s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes flagUp{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+
+/* ---- right column ---- */
+.panel{display:flex; flex-direction:column; gap:12px}
+.think{background:rgba(255,255,255,.07); border:1.5px solid rgba(255,255,255,.16); border-radius:14px; padding:14px 12px; text-align:center}
+.orig{font-family:var(--display); font-weight:700; font-size:clamp(26px,7vw,36px); letter-spacing:.5px}
+.arrowdown{color:var(--dim); font-size:15px; margin:4px 0 2px; font-weight:800}
+.recast{font-family:var(--display); font-weight:500; font-size:clamp(18px,4.8vw,24px); color:var(--mint)}
+.recast .box{display:inline-block; min-width:44px; padding:1px 8px; border:2.5px dashed var(--mint);
+  border-radius:8px; color:var(--mint)}
+.recast .box.filled{border-style:solid; background:rgba(127,227,188,.18)}
+
+#prompt{text-align:center; font-family:var(--display); font-weight:500; font-size:clamp(15px,4vw,19px);
+  min-height:48px; line-height:1.4}
+#prompt em{font-style:normal; color:var(--ledge); font-weight:700}
+#prompt small{display:block; font-family:var(--body); font-size:12px; font-weight:800; color:var(--dim); margin-top:5px}
+
+.pad{display:grid; gap:8px; grid-template-columns:repeat(3,1fr)}
+.key{font-family:var(--display); font-weight:700; font-size:clamp(20px,5vw,26px); padding:13px 0;
+  border:2px solid rgba(255,255,255,.3); border-radius:12px; background:rgba(255,255,255,.09);
+  color:var(--mist); cursor:pointer; transition:transform .07s, background .15s}
+.key:hover{background:rgba(255,255,255,.2)}
+.key:active,.key.press{transform:translateY(3px)}
+.key:disabled{opacity:.28; cursor:default}
+.key.good{background:var(--mint); border-color:var(--mint); color:var(--deep)}
+.key.bad{background:var(--coral); border-color:var(--coral); color:#fff}
+.pad.wait{opacity:.32; pointer-events:none}
+
+.strip{display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; min-height:44px;
+  font-family:var(--display); font-weight:500; font-size:clamp(15px,3.8vw,18px);
+  background:rgba(0,0,0,.25); border:1.5px solid rgba(255,255,255,.13); border-radius:12px; padding:10px}
+.strip .part{opacity:0; animation:slidein .45s ease-out forwards}
+@keyframes slidein{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.strip .a{color:var(--dim)} .strip .g{color:var(--mint)} .strip .y{color:var(--ledge)} .strip .r{color:var(--coral); font-weight:700}
+
+#msg{text-align:center; font-weight:800; font-size:13.5px; min-height:22px; color:var(--dim)}
+#msg.good{color:var(--mint)} #msg.bad{color:var(--coral)}
+.tools{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+.tool{font-family:var(--body); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.3); background:transparent; color:var(--mist); cursor:pointer}
+.tool:hover{background:rgba(255,255,255,.16)}
+button:focus-visible{outline:3px solid var(--ledge); outline-offset:3px}
+.shake{animation:shake .38s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}60%{transform:translateX(7px)}}
+
+/* end */
+#end{position:fixed; inset:0; background:rgba(6,20,16,.92); display:none; align-items:center;
+  justify-content:center; padding:20px; z-index:50}
+#end.show{display:flex}
+.endcard{background:linear-gradient(180deg,#1B5245,#0E2C24); border:2px solid var(--mint); border-radius:20px;
+  padding:26px 24px; text-align:center; max-width:380px; width:100%; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:700; font-size:24px; margin:0 0 6px}
+.peaks{font-size:30px; letter-spacing:8px; margin:10px 0}
+.peaks span{opacity:.2; display:inline-block; transition:all .35s}
+.peaks span.on{opacity:1; transform:scale(1.2)}
+.stats{display:flex; justify-content:center; gap:20px; margin:14px 0 18px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-weight:700; font-size:24px; color:var(--mint)}
+.stat span{font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--dim)}
+.big{font-family:var(--display); font-weight:700; font-size:18px; padding:12px 28px; border-radius:12px;
+  background:var(--mint); color:var(--deep); border:none; cursor:pointer}
+.big:active{transform:translateY(3px)}
+#rec{font-size:12px; font-weight:800; color:var(--dim); margin-top:12px}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important; animation-iteration-count:1 !important}}
+</style>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>How many more?</h1>
+      <p class="sub">Do not go backwards: start from the small one and climb to the big one</p>
+    </div>
+    <div class="chips">
+      <div class="chip">Points<b id="score">0</b></div>
+      <div class="chip" id="streakChip">⛰<b id="streak">0</b></div>
+      <div class="chip"><b id="qn">1</b>/8</div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="bar-label">Help</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="guided" class="on">Guided</button>
+      <button data-m="half">One step</button>
+      <button data-m="solo">On my own</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="climb">
+      <svg id="wall" viewBox="0 0 210 470" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <line class="rope" x1="150" y1="10" x2="150" y2="460"/>
+        <circle id="ledgeGlow" cx="150" cy="0" r="30" fill="var(--ledge)" style="filter:blur(16px)"/>
+        <g id="rungs"></g>
+        <path id="br1" class="bracket" d=""/>
+        <path id="br2" class="bracket" d=""/>
+        <path id="br3" class="bracket" d=""/>
+        <text id="bl1" class="blab" x="0" y="0"></text>
+        <text id="bl2" class="blab" x="0" y="0"></text>
+        <text id="bl3" class="blab" x="0" y="0"></text>
+        <g id="flagTop">
+          <line x1="150" y1="0" x2="150" y2="-26" stroke="var(--mist)" stroke-width="2.5"/>
+          <path d="M150 -26 L172 -19 L150 -12 Z" fill="var(--coral)"/>
+        </g>
+        <g id="climber" transform="translate(150,400)">
+          <circle cx="0" cy="-22" r="7" fill="var(--mint)"/>
+          <path d="M0 -15 L0 -4" stroke="var(--mint)" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M0 -12 L-9 -18 M0 -12 L9 -18" stroke="var(--mint)" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M0 -4 L-7 5 M0 -4 L7 5" stroke="var(--mint)" stroke-width="3.5" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <div class="think">
+        <div class="orig" id="orig"></div>
+        <div class="arrowdown">I think</div>
+        <div class="recast" id="recast"></div>
+      </div>
+      <div id="prompt"></div>
+      <div class="pad" id="pad"></div>
+      <div id="msg"></div>
+      <div class="strip" id="strip"></div>
+      <div class="tools">
+        <button class="tool" id="showSteps">🪜 Show the two steps</button>
+        <button class="tool" id="restart">↻ Start again</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">At the top!</h2>
+    <div class="peaks" id="peaks"><span>⛰</span><span>⛰</span><span>⛰</span></div>
+    <div class="stats">
+      <div class="stat"><b id="fOk">0</b><span>clean climbs</span></div>
+      <div class="stat"><b id="fPts">0</b><span>points</span></div>
+    </div>
+    <button class="big" id="again">Another climb</button>
+    <div id="rec"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const TOTAL=8, X=150, TOP=40, BOT=430;
+let mode='guided', score=0, streak=0, idx=0, clean=0, tries=0, record=null;
+let cur=null, step=0, revealed=false, ypos=null;
+
+/* sound */
+let actx=null;
+function beep(f,d=.12,type='sine',v=.13,delay=0){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+function stepSound(i){ beep(420+i*40,.07,'square',.05,i*.09); }
+function chime(){ [660,880,1175].forEach((f,i)=>beep(f,.3,'triangle',.11,i*.09)); }
+
+/* ---------- problem ---------- */
+function newProblem(){
+  const s=4+Math.floor(Math.random()*6);       // 4..9
+  const need=10-s;                              // 1..6
+  const maxRest=Math.min(8,9-need);
+  const rest=1+Math.floor(Math.random()*maxRest);
+  const big=10+rest;
+  return {s,big,need,rest,ans:need+rest};
+}
+
+/* ---------- wall ---------- */
+function buildWall(q){
+  const from=Math.max(0,q.s-1), to=q.big+1;
+  ypos=n=>BOT-(n-from)/(to-from)*(BOT-TOP);
+  const g=$('rungs'); g.innerHTML='';
+  for(let n=from;n<=to;n++){
+    const y=ypos(n);
+    const l=document.createElementNS(NS,'line');
+    l.setAttribute('x1',X-26); l.setAttribute('y1',y); l.setAttribute('x2',X+26); l.setAttribute('y2',y);
+    l.setAttribute('class','rung'+(n===10?' ledge':'')); l.dataset.n=n; g.appendChild(l);
+    const t=document.createElementNS(NS,'text');
+    t.setAttribute('x',X-34); t.setAttribute('y',y+6);
+    t.setAttribute('class','rnum'+(n===10?' ten':'')); t.dataset.n=n; t.textContent=n; g.appendChild(t);
+  }
+  $('ledgeGlow').setAttribute('cy',ypos(10)); $('ledgeGlow').classList.remove('on');
+  $('flagTop').setAttribute('transform',`translate(0,${ypos(q.big)})`);
+  $('flagTop').classList.remove('up');
+  moveClimber(q.s,false);
+  ['br1','br2','br3'].forEach(id=>{const e=$(id); e.setAttribute('d',''); e.classList.remove('draw');});
+  ['bl1','bl2','bl3'].forEach(id=>$(id).classList.remove('show'));
+}
+function moveClimber(n,anim=true){
+  const c=$('climber');
+  c.style.transition = anim? 'transform .75s cubic-bezier(.3,.7,.3,1)' : 'none';
+  c.setAttribute('transform',`translate(${X},${ypos(n)})`);
+  if(anim){ c.classList.remove('hop'); void c.getBBox(); c.classList.add('hop');
+    setTimeout(()=>c.classList.remove('hop'),760); }
+}
+function litRungs(from,to){
+  let i=0;
+  for(let n=from+1;n<=to;n++){
+    setTimeout(()=>{
+      const r=[...document.querySelectorAll('.rung')].find(x=>+x.dataset.n===n);
+      const t=[...document.querySelectorAll('.rnum')].find(x=>+x.dataset.n===n);
+      if(r) r.classList.add('passed'); if(t) t.classList.add('on');
+      stepSound(i);
+    }, i*130); i++;
+  }
+}
+function bracket(id,labId,n1,n2,txt,dx){
+  const y1=ypos(n1), y2=ypos(n2), x=X+34+dx;
+  const p=$(id);
+  p.setAttribute('d',`M ${X+28} ${y1} L ${x} ${y1} L ${x} ${y2} L ${X+28} ${y2}`);
+  p.setAttribute('pathLength','1'); p.classList.remove('draw'); void p.getBBox(); p.classList.add('draw');
+  const l=$(labId); l.setAttribute('x',x+6); l.setAttribute('y',(y1+y2)/2+6); l.textContent=txt;
+  l.classList.remove('show'); void l.getBBox(); setTimeout(()=>l.classList.add('show'),300);
+}
+
+/* ---------- panel ---------- */
+function renderRecast(){
+  const b1 = step>0 || revealed ? `<span class="box filled">${cur.ans}</span>` : `<span class="box">?</span>`;
+  const filled = (step>2) ? `<span class="box filled">${cur.ans}</span>` : `<span class="box">?</span>`;
+  $('orig').innerHTML=`${cur.big} <span style="color:var(--dim)">−</span> ${cur.s}`;
+  $('recast').innerHTML=`${cur.s} + ${filled} = ${cur.big}`;
+}
+function buildStrip(state){
+  const s=$('strip'); s.innerHTML='';
+  const add=(h,c='')=>{const d=document.createElement('span'); d.className='part '+c; d.innerHTML=h; s.appendChild(d);};
+  add(`${cur.big} − ${cur.s}`,'a');
+  if(state>=1) { add('→','a'); add(`from ${cur.s} to 10 is <span class="g">${cur.need}</span>`); }
+  if(state>=2) { add('→','a'); add(`from 10 to ${cur.big} is <span class="y">${cur.rest}</span>`); }
+  if(state>=3) { add('→','a'); add(`<span class="g">${cur.need}</span> + <span class="y">${cur.rest}</span> = <span class="r">${cur.ans}</span>`); }
+}
+function renderStep(){
+  const p=$('prompt');
+  if(step===0){ p.innerHTML=`You are on step <em>${cur.s}</em>.<br>How far do you climb to reach <em>10</em>?<small>These are the bonds to 10</small>`; }
+  else if(step===1){ p.innerHTML=`You are on <em>10</em>.<br>How much further do you climb to reach <em>${cur.big}</em>?`; }
+  else { p.innerHTML=`Altogether, how many steps did you climb?<small>${mode==='solo'?`${cur.big} − ${cur.s}`:`${cur.need} + ${cur.rest}`}</small>`; }
+  renderPad();
+}
+function renderPad(){
+  const pad=$('pad'); pad.innerHTML=''; pad.classList.remove('wait');
+  for(let n=1;n<=9;n++){
+    const b=document.createElement('button');
+    b.className='key'; b.textContent=n; b.dataset.n=n;
+    b.addEventListener('click',()=>answer(n,b));
+    pad.appendChild(b);
+  }
+}
+
+/* ---------- flow ---------- */
+function startProblem(){
+  if(idx>=TOTAL){ finish(); return; }
+  cur=newProblem(); tries=0; revealed=false;
+  step = mode==='guided'? 0 : mode==='half'? 0 : 2;
+  if(mode==='half') step=0;
+  $('qn').textContent=idx+1;
+  $('msg').textContent=''; $('msg').className='';
+  buildWall(cur); renderRecast(); buildStrip(0); renderStep();
+}
+
+function finishClimb(){
+  const perfect = tries===0 && !revealed;
+  if(perfect){ clean++; streak++; score+=20; } else { streak=0; score+=8; }
+  $('score').textContent=score; $('streak').textContent=streak;
+  $('streakChip').classList.toggle('hot',streak>=3);
+  $('msg').textContent = perfect? ['At the top!','Clean climb!','Perfect!'][Math.floor(Math.random()*3)] : 'Made it.';
+  $('msg').className='good';
+  step=3; renderRecast(); buildStrip(3);
+  bracket('br3','bl3',cur.s,cur.big,'='+cur.ans,32);
+  $('flagTop').classList.add('up'); chime();
+  idx++;
+  setTimeout(startProblem,2600);
+}
+
+function answer(n,btn){
+  const want = step===0? cur.need : step===1? cur.rest : cur.ans;
+  if(n===want){
+    btn.classList.add('good'); $('pad').classList.add('wait');
+    beep(660,.1,'triangle'); beep(990,.14,'triangle',.11,.07);
+    if(step===0){
+      litRungs(cur.s,10); moveClimber(10);
+      setTimeout(()=>{ $('ledgeGlow').classList.add('on'); beep(520,.35,'sine',.1);
+        bracket('br1','bl1',cur.s,10,'+'+cur.need,0); },700);
+      buildStrip(1);
+      $('msg').textContent='First stop: 10.'; $('msg').className='good';
+      step=1;
+      setTimeout(()=>{ $('msg').textContent=''; $('msg').className=''; renderStep(); },1900);
+    } else if(step===1){
+      litRungs(10,cur.big); moveClimber(cur.big);
+      setTimeout(()=>bracket('br2','bl2',10,cur.big,'+'+cur.rest,0),700);
+      buildStrip(2);
+      if(mode==='guided'){
+        step=2; $('msg').textContent='';
+        setTimeout(()=>renderStep(),1700);
+      } else {
+        setTimeout(finishClimb,1500);
+      }
+    } else {
+      if(mode==='solo' && !revealed){
+        litRungs(cur.s,cur.big); moveClimber(cur.big);
+        setTimeout(()=>{ bracket('br1','bl1',cur.s,10,'+'+cur.need,0);
+          bracket('br2','bl2',10,cur.big,'+'+cur.rest,0); },700);
+        buildStrip(2);
+        setTimeout(finishClimb,1600);
+      } else finishClimb();
+    }
+  } else {
+    tries++; streak=0; $('streak').textContent=0; $('streakChip').classList.remove('hot');
+    btn.classList.add('bad'); btn.disabled=true;
+    $('app').classList.add('shake'); setTimeout(()=>$('app').classList.remove('shake'),380);
+    beep(180,.2,'sawtooth',.1);
+    const tips=[`From ${cur.s} to 10: it is the bond to 10 you already know.`,
+                `From 10 to ${cur.big}: just look at the ones digit.`,
+                `Add the two parts of the climb together.`];
+    $('msg').textContent=tips[Math.min(step,2)]; $('msg').className='bad';
+    if(step===2 && mode==='solo' && !revealed) showSteps();
+  }
+}
+
+function showSteps(){
+  if(revealed) return;
+  revealed=true;
+  litRungs(cur.s,cur.big);
+  bracket('br1','bl1',cur.s,10,'+'+cur.need,0);
+  setTimeout(()=>bracket('br2','bl2',10,cur.big,'+'+cur.rest,0),300);
+  buildStrip(2);
+  $('msg').textContent=`Two parts: ${cur.need} and ${cur.rest}.`; $('msg').className='';
+}
+
+/* ---------- end ---------- */
+function finish(){
+  const p = clean>=7?3 : clean>=5?2 : 1;
+  $('fOk').textContent=clean+'/'+TOTAL; $('fPts').textContent=score;
+  $('endTitle').textContent = p===3?'Summit reached!' : p===2?'Great climb!' : 'Good start';
+  const row=$('peaks').children; [...row].forEach(s=>s.classList.remove('on'));
+  for(let i=0;i<p;i++) setTimeout(()=>{row[i].classList.add('on'); beep(600+i*200,.25,'triangle',.12);},350+i*260);
+  $('end').classList.add('show');
+  saveRecord();
+}
+async function saveRecord(){
+  const key='salita10:record:en'; let prev=null;
+  try{ const r=await window.storage.get(key); prev=r?JSON.parse(r.value):null; }catch(e){ prev=record; }
+  if(!prev||score>prev.score){
+    record={score,clean,date:new Date().toLocaleDateString('en-GB')};
+    try{ await window.storage.set(key,JSON.stringify(record)); }catch(e){}
+    $('rec').textContent='🏆 New best!';
+  } else { record=prev; $('rec').textContent='Best: '+prev.score+' points ('+prev.date+')'; }
+}
+
+/* ---------- controls ---------- */
+$('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('modeSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.m; reset();
+});
+$('showSteps').addEventListener('click',showSteps);
+$('restart').addEventListener('click',reset);
+$('again').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{
+  const n=parseInt(e.key,10); if(isNaN(n)||n<1||n>9) return;
+  const b=[...document.querySelectorAll('.key')].find(k=>+k.dataset.n===n&&!k.disabled);
+  if(b && !$('pad').classList.contains('wait')){ b.classList.add('press');
+    setTimeout(()=>b.classList.remove('press'),90); answer(n,b); }
+});
+
+function reset(){
+  score=0; streak=0; idx=0; clean=0;
+  $('score').textContent=0; $('streak').textContent=0;
+  $('streakChip').classList.remove('hot');
+  $('end').classList.remove('show');
+  startProblem();
+}
+reset();
+</script>

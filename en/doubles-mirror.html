@@ -1,0 +1,375 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The doubles mirror</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --sky-1:#FBEDE4; --sky-2:#F6DED6; --water-1:#BCD9DE; --water-2:#8FBDC6;
+  --ink:#1C3A43; --ink-2:#5C7C86; --paper:#FDF7F1;
+  --teal:#2E8B94; --coral:#E8734A; --gold:#DFA53B; --mint:#3FAE8B;
+  --display:'Fraunces', Georgia, serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--body); color:var(--ink); min-height:100%;
+  background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 46%,var(--water-1) 46%,var(--water-2) 100%);
+  background-attachment:fixed;
+  display:flex; justify-content:center; padding:16px 14px 34px;
+}
+#app{width:100%; max-width:560px}
+
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+h1{font-family:var(--display); font-weight:700; font-size:clamp(22px,5.4vw,29px); margin:0; letter-spacing:-.3px}
+.sub{font-size:12.5px; font-weight:800; color:var(--ink-2); margin:2px 0 0}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.62); border:1.5px solid rgba(28,58,67,.2); border-radius:9px;
+  padding:5px 10px; font-size:11.5px; font-weight:800}
+.chip b{font-family:var(--display); font-weight:700; font-size:15px; color:var(--teal); margin-left:3px}
+.chip.hot{background:var(--coral); color:#fff; border-color:var(--coral)}
+.chip.hot b{color:#fff}
+
+.bar{display:flex; gap:8px; align-items:center; margin:13px 0 8px; flex-wrap:wrap}
+.bar-label{font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--ink-2)}
+.seg{display:flex; border:1.5px solid var(--ink); border-radius:9px; overflow:hidden; background:rgba(255,255,255,.5)}
+.seg button{font-family:var(--body); font-weight:800; font-size:11.5px; padding:6px 11px; border:none;
+  background:transparent; color:var(--ink); cursor:pointer; border-right:1.5px solid rgba(28,58,67,.25)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--ink); color:var(--paper)}
+
+/* mastery bar */
+.mastery{display:flex; gap:3px; margin:8px 0 4px; height:7px}
+.pip{flex:1; border-radius:3px; background:rgba(28,58,67,.16); transition:background .5s}
+.pip.b2{background:rgba(46,139,148,.4)} .pip.b3{background:rgba(46,139,148,.7)}
+.pip.b4{background:var(--gold); box-shadow:0 0 7px rgba(223,165,59,.6)}
+
+/* ---- stage ---- */
+.stage{position:relative; background:linear-gradient(180deg,rgba(255,255,255,.55) 0 50%,rgba(143,189,198,.42) 50% 100%);
+  border:2px solid var(--ink); border-radius:16px; padding:16px 12px; margin-top:6px; overflow:hidden}
+.fact{text-align:center; font-family:var(--display); font-weight:700;
+  font-size:clamp(34px,9vw,48px); letter-spacing:1px; line-height:1.1}
+.fact .eq{color:var(--ink-2)}
+.fact .res{color:var(--coral)}
+.mirrorbox{display:flex; flex-direction:column; align-items:center; gap:0; margin:12px 0 4px;
+  opacity:0; max-height:0; overflow:hidden; transition:opacity .45s ease, max-height .45s ease}
+.mirrorbox.show{opacity:1; max-height:230px}
+.tenframe{display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(2,1fr);
+  border:2.5px solid var(--ink); border-radius:3px; background:rgba(255,255,255,.72)}
+.cell{width:clamp(22px,5.6vw,29px); aspect-ratio:1; border-right:1px solid rgba(28,58,67,.22);
+  border-bottom:1px solid rgba(28,58,67,.22); display:flex; align-items:center; justify-content:center}
+.cell:nth-child(5n){border-right:none}
+.cell:nth-child(n+6){border-bottom:none}
+.pip-d{width:68%; height:68%; border-radius:50%; background:var(--teal); animation:drop .3s ease-out backwards}
+.pip-d.extra{background:var(--coral); box-shadow:0 0 9px rgba(232,115,74,.8); animation:drop .3s ease-out backwards, throb 1.1s ease-in-out infinite .3s}
+@keyframes drop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+.reflection{transform:scaleY(-1); opacity:.72; filter:saturate(.85)}
+.reflection .tenframe{background:rgba(190,222,228,.6)}
+.reflection.dissolve{animation:fadeAway .9s ease-out forwards}
+@keyframes fadeAway{to{opacity:0; transform:scaleY(-1) translateY(-16px)}}
+.waterline{width:100%; max-width:190px; height:3px; margin:5px 0; position:relative;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent)}
+.waterline::after{content:""; position:absolute; inset:-1px 0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);
+  animation:shimmer 3s ease-in-out infinite}
+@keyframes shimmer{0%,100%{transform:translateX(-30%);opacity:.4}50%{transform:translateX(30%);opacity:1}}
+.timerbar{height:4px; background:rgba(28,58,67,.15); border-radius:3px; overflow:hidden; margin-top:10px}
+.timerbar i{display:block; height:100%; background:var(--gold); width:100%}
+.timerbar.run i{animation:drain 4s linear forwards}
+@keyframes drain{to{width:0}}
+.stage.shake{animation:shake .38s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}60%{transform:translateX(7px)}}
+
+/* strategy line */
+#strategy{text-align:center; font-family:var(--display); font-weight:500; font-size:clamp(14px,3.6vw,17px);
+  min-height:44px; margin:12px 0 8px; line-height:1.4}
+#strategy b{color:var(--teal)} #strategy .c{color:var(--coral)}
+
+/* keypad */
+.pad{display:grid; gap:7px; grid-template-columns:repeat(5,1fr)}
+.key{font-family:var(--display); font-weight:700; font-size:clamp(17px,4.4vw,21px); padding:11px 0;
+  border:2px solid var(--ink); border-radius:10px; background:var(--paper); color:var(--ink);
+  cursor:pointer; box-shadow:0 3px 0 var(--ink); transition:transform .07s, box-shadow .07s}
+.key:active,.key.press{transform:translateY(3px); box-shadow:0 0 0 var(--ink)}
+.key:disabled{opacity:.32; cursor:default}
+.key.good{background:var(--mint); border-color:var(--mint); color:#fff; box-shadow:0 3px 0 #2A7D63}
+.key.bad{background:var(--coral); border-color:var(--coral); color:#fff; box-shadow:0 3px 0 #B24F2C}
+.pad.wait{opacity:.35; pointer-events:none}
+
+#msg{text-align:center; font-weight:800; font-size:13.5px; min-height:22px; margin-top:9px; color:var(--ink-2)}
+#msg.good{color:var(--mint)} #msg.bad{color:var(--coral)}
+.tools{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap}
+.tool{font-family:var(--body); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px;
+  border:2px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer}
+.tool:hover{background:var(--ink); color:var(--paper)}
+button:focus-visible{outline:3px solid var(--coral); outline-offset:3px}
+
+/* end */
+#end{position:fixed; inset:0; background:rgba(28,58,67,.9); display:none; align-items:center;
+  justify-content:center; padding:20px; z-index:50}
+#end.show{display:flex}
+.endcard{background:var(--paper); border:2.5px solid var(--ink); border-radius:20px; box-shadow:0 8px 0 rgba(0,0,0,.25);
+  padding:26px 24px; text-align:center; max-width:390px; width:100%; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:700; font-size:24px; margin:0 0 6px}
+.stats{display:flex; justify-content:center; gap:20px; margin:16px 0 8px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-weight:700; font-size:25px; color:var(--teal)}
+.stat span{font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--ink-2)}
+#weak{font-size:13px; font-weight:800; color:var(--ink-2); margin:10px 0 16px; line-height:1.5}
+#weak b{color:var(--coral); font-family:var(--display); font-size:16px}
+.big{font-family:var(--display); font-weight:700; font-size:18px; padding:12px 28px; border-radius:12px;
+  background:var(--coral); color:#fff; border:2px solid var(--ink); box-shadow:0 4px 0 var(--ink); cursor:pointer}
+.big:active{transform:translateY(3px); box-shadow:0 1px 0 var(--ink)}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important; animation-iteration-count:1 !important}}
+</style>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>The doubles mirror</h1>
+      <p class="sub">Doubles by heart · near doubles worked out · halves are the reflection</p>
+    </div>
+    <div class="chips">
+      <div class="chip">Points<b id="score">0</b></div>
+      <div class="chip" id="streakChip">✦<b id="streak">0</b></div>
+      <div class="chip"><b id="qn">1</b>/20</div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="bar-label">Practise</span>
+    <div class="seg" id="deckSeg">
+      <button data-d="double">Doubles</button>
+      <button data-d="near">Near doubles</button>
+      <button data-d="half">Halves</button>
+      <button data-d="all" class="on">All</button>
+    </div>
+  </div>
+  <div class="mastery" id="mastery"></div>
+
+  <div class="stage" id="stage">
+    <div class="fact" id="fact"></div>
+    <div class="mirrorbox" id="mirror">
+      <div id="topFrame"></div>
+      <div class="waterline"></div>
+      <div class="reflection" id="botFrame"></div>
+    </div>
+    <div class="timerbar" id="timer"><i></i></div>
+  </div>
+
+  <div id="strategy"></div>
+  <div class="pad" id="pad"></div>
+  <div id="msg"></div>
+
+  <div class="tools">
+    <button class="tool" id="peek">👁 Look in the mirror</button>
+    <button class="tool" id="restart">↻ Start again</button>
+  </div>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">Session finished</h2>
+    <div class="stats">
+      <div class="stat"><b id="fAuto">0</b><span>by heart</span></div>
+      <div class="stat"><b id="fOk">0</b><span>right</span></div>
+      <div class="stat"><b id="fPts">0</b><span>points</span></div>
+    </div>
+    <div id="weak"></div>
+    <button class="big" id="again">Again</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const SESSION=20, FAST_MS=4000;
+
+/* ---------- deck ---------- */
+function makeDeck(){
+  const d=[];
+  [3,4,5,6,7,8,9].forEach(n=>d.push({t:'double',a:n,b:n,ans:2*n}));
+  [[3,4],[4,5],[5,6],[6,7],[7,8],[8,9]].forEach(([a,b])=>d.push({t:'near',a,b,ans:a+b}));
+  [4,5,6,7,8,9].forEach(n=>d.push({t:'half',a:2*n,b:n,ans:n}));
+  return d.map((c,i)=>({...c,id:i,box:1,due:Math.random()*3,hits:0,miss:0}));
+}
+let deck=makeDeck(), filter='all';
+const SPACING={1:2,2:5,3:9,4:15};
+
+function pool(){ return deck.filter(c=>filter==='all'||c.t===filter); }
+function pick(){
+  const p=pool().slice().sort((x,y)=>x.due-y.due||x.box-y.box);
+  const head=p.slice(0,3);
+  return head[Math.floor(Math.random()*head.length)];
+}
+
+/* ---------- state ---------- */
+let score=0, streak=0, idx=0, okCount=0, autoCount=0, cur=null, tries=0, peeked=false, t0=0, phase='ask';
+
+/* ---------- sound ---------- */
+let actx=null;
+function beep(f,d=.12,type='sine',v=.13,delay=0){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+function drop(){ beep(1200,.09,'sine',.09); beep(700,.14,'sine',.07,.05); }
+
+/* ---------- rendering ---------- */
+function frameEl(n,extraAt){
+  const f=document.createElement('div'); f.className='tenframe';
+  for(let i=0;i<10;i++){
+    const c=document.createElement('div'); c.className='cell';
+    if(i<n){
+      const p=document.createElement('div');
+      p.className='pip-d'+(extraAt!==undefined&&i===extraAt?' extra':'');
+      p.style.animationDelay=(i*35)+'ms';
+      c.appendChild(p);
+    }
+    f.appendChild(c);
+  }
+  return f;
+}
+function drawMirror(){
+  const base = cur.t==='half'? cur.b : cur.a;
+  $('topFrame').innerHTML=''; $('topFrame').appendChild(frameEl(base));
+  $('botFrame').innerHTML='';
+  const bottomN = cur.t==='near'? cur.b : base;
+  $('botFrame').appendChild(frameEl(bottomN, cur.t==='near'? bottomN-1 : undefined));
+  $('botFrame').classList.remove('dissolve');
+}
+function showMirror(on){ $('mirror').classList.toggle('show',on); if(on) drawMirror(); }
+
+function factText(res){
+  if(cur.t==='half') return `${cur.a} <span class="eq">−</span> ${cur.b} <span class="eq">=</span> ${res!==undefined?`<span class="res">${res}</span>`:'<span class="eq">?</span>'}`;
+  return `${cur.a} <span class="eq">+</span> ${cur.b} <span class="eq">=</span> ${res!==undefined?`<span class="res">${res}</span>`:'<span class="eq">?</span>'}`;
+}
+function strategyText(){
+  if(cur.t==='double') return `A double: <b>${cur.a} and ${cur.a}</b>. These you know by heart.`;
+  if(cur.t==='near') return `<b>${cur.a} + ${cur.a} = ${2*cur.a}</b>, and <span class="c">one more</span> makes <b>${cur.ans}</b>.`;
+  return `<b>${cur.a}</b> is double ${cur.b}: take away the reflection and <b>${cur.b}</b> is left.`;
+}
+function renderPad(){
+  const p=$('pad'); p.innerHTML=''; p.classList.remove('wait');
+  const from = cur.t==='half'? 1:6, to = cur.t==='half'? 9:20;
+  for(let n=from;n<=to;n++){
+    const b=document.createElement('button');
+    b.className='key'; b.textContent=n; b.dataset.n=n;
+    b.addEventListener('click',()=>answer(n,b));
+    p.appendChild(b);
+  }
+}
+function renderMastery(){
+  const m=$('mastery'); m.innerHTML='';
+  pool().forEach(c=>{
+    const d=document.createElement('div'); d.className='pip b'+c.box; m.appendChild(d);
+  });
+}
+
+/* ---------- flow ---------- */
+function nextCard(){
+  if(idx>=SESSION){ finish(); return; }
+  cur=pick(); tries=0; peeked=false; phase='ask';
+  $('qn').textContent=idx+1;
+  $('fact').innerHTML=factText();
+  $('strategy').innerHTML='';
+  $('msg').textContent=''; $('msg').className='';
+  showMirror(false);
+  renderPad();
+  const tb=$('timer'); tb.classList.remove('run'); void tb.offsetWidth; tb.classList.add('run');
+  t0=performance.now();
+}
+
+function answer(n,btn){
+  if(phase!=='ask') return;
+  if(n===cur.ans){
+    phase='done';
+    const ms=performance.now()-t0;
+    const auto = ms<FAST_MS && tries===0 && !peeked;
+    btn.classList.add('good'); $('pad').classList.add('wait');
+    $('timer').classList.remove('run');
+    $('fact').innerHTML=factText(cur.ans);
+    beep(660,.1,'triangle'); beep(990,.15,'triangle',.11,.07);
+    showMirror(true); drop();
+    if(cur.t==='half') setTimeout(()=>$('botFrame').classList.add('dissolve'),650);
+    $('strategy').innerHTML=strategyText();
+
+    okCount++; cur.hits++;
+    if(auto){ autoCount++; streak++; score+=20; cur.box=Math.min(4,cur.box+1); }
+    else { streak=0; score+=8; }
+    cur.due = idx + SPACING[auto?cur.box:1] + Math.random();
+    $('score').textContent=score; $('streak').textContent=streak;
+    $('streakChip').classList.toggle('hot',streak>=4);
+    $('msg').textContent = auto? ['By heart! ✦','Instant!','Automatic!'][Math.floor(Math.random()*3)] : 'Correct.';
+    $('msg').className='good';
+    renderMastery();
+    idx++;
+    setTimeout(nextCard, cur.t==='half'?2400:2100);
+  } else {
+    tries++; streak=0; $('streak').textContent=0; $('streakChip').classList.remove('hot');
+    btn.classList.add('bad'); btn.disabled=true;
+    cur.miss++; cur.box=1;
+    $('stage').classList.add('shake'); setTimeout(()=>$('stage').classList.remove('shake'),380);
+    beep(180,.2,'sawtooth',.1);
+    showMirror(true);
+    $('strategy').innerHTML=strategyText();
+    $('msg').textContent='Look in the mirror and try again.'; $('msg').className='bad';
+    renderMastery();
+  }
+}
+
+/* ---------- end ---------- */
+function finish(){
+  phase='idle';
+  $('fAuto').textContent=autoCount; $('fOk').textContent=okCount+'/'+SESSION; $('fPts').textContent=score;
+  const r=autoCount/SESSION;
+  $('endTitle').textContent = r>=.8?'You know them by heart!' : r>=.5?'They are becoming automatic' : 'Good work';
+  const weak=pool().filter(c=>c.miss>0).sort((a,b)=>b.miss-a.miss).slice(0,3);
+  $('weak').innerHTML = weak.length
+    ? 'To look at again tomorrow:<br>'+weak.map(c=>`<b>${c.a} ${c.t==='half'?'−':'+'} ${c.b}</b>`).join(' · ')
+    : 'Nothing shaky in this session.';
+  $('end').classList.add('show');
+  beep(660,.25,'triangle',.12); beep(880,.3,'triangle',.11,.14); beep(1175,.35,'triangle',.1,.28);
+}
+
+/* ---------- controls ---------- */
+$('deckSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('deckSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); filter=b.dataset.d; reset();
+});
+$('peek').addEventListener('click',()=>{
+  if(phase!=='ask') return;
+  peeked=true; showMirror(true);
+  $('strategy').innerHTML = cur.t==='near'
+    ? `Start from the double: <b>${cur.a} + ${cur.a}</b>. Then look at the <span class="c">orange</span> dot.`
+    : cur.t==='half' ? `The reflection is the half.` : `Count one part only, then double it.`;
+});
+$('restart').addEventListener('click',reset);
+$('again').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{
+  if(phase!=='ask') return;
+  const k=[...document.querySelectorAll('.key')];
+  const n=parseInt(e.key,10); if(isNaN(n)) return;
+  const b=k.find(x=>+x.dataset.n===n&&!x.disabled);
+  if(b){ b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); answer(n,b); }
+});
+
+function reset(){
+  score=0; streak=0; idx=0; okCount=0; autoCount=0;
+  deck.forEach(c=>{c.due=Math.random()*3;});
+  $('score').textContent=0; $('streak').textContent=0;
+  $('streakChip').classList.remove('hot');
+  $('end').classList.remove('show');
+  renderMastery(); nextCard();
+}
+reset();
+</script>

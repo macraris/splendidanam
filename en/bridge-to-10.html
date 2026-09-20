@@ -1,0 +1,477 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The bridge to 10 — the station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --sky-1:#241C46; --sky-2:#5C3A6E; --sky-3:#DE8352; --sky-4:#F3C07A;
+  --ground:#140E28; --rail:#9C8FB8; --paper:#F6F0E6; --dim:#B7ACCB;
+  --hop1:#3FD1A8; --hop2:#FFB13F; --station:#FFD98A; --glow:#FFE9B8;
+  --display:'Oswald', 'Arial Narrow', system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--body); color:var(--paper); min-height:100%;
+  background:linear-gradient(180deg,var(--sky-1) 0%,var(--sky-2) 42%,var(--sky-3) 72%,var(--sky-4) 88%,var(--ground) 88.5%,var(--ground) 100%);
+  background-attachment:fixed;
+  display:flex; justify-content:center; padding:16px 14px 34px;
+}
+#app{width:100%; max-width:720px}
+
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+h1{font-family:var(--display); font-weight:500; font-size:clamp(22px,5.4vw,30px); margin:0; letter-spacing:2px; text-transform:uppercase}
+.sub{font-size:12.5px; font-weight:800; color:var(--dim); margin:2px 0 0}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.25); border-radius:8px;
+  padding:5px 11px; font-size:11.5px; font-weight:800; letter-spacing:.5px}
+.chip b{font-family:var(--display); font-size:16px; color:var(--station); margin-left:3px}
+.chip.hot{background:var(--hop2); color:#3A2000; border-color:var(--hop2)}
+.chip.hot b{color:#3A2000}
+
+.bar{display:flex; gap:8px; align-items:center; margin:14px 0 8px; flex-wrap:wrap}
+.bar-label{font-family:var(--display); font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--dim)}
+.seg{display:flex; border:1.5px solid rgba(255,255,255,.3); border-radius:9px; overflow:hidden}
+.seg button{font-family:var(--body); font-weight:800; font-size:12px; padding:6px 12px; border:none;
+  background:transparent; color:var(--paper); cursor:pointer; border-right:1.5px solid rgba(255,255,255,.3)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--station); color:#3A2000}
+
+/* ---- scene ---- */
+.scene{background:rgba(10,6,26,.34); border:1.5px solid rgba(255,255,255,.16); border-radius:16px;
+  padding:8px 6px 4px; margin-top:6px; overflow:hidden}
+svg#line{display:block; width:100%; height:auto}
+.tick{stroke:var(--rail); stroke-width:2}
+.axis{stroke:var(--rail); stroke-width:3; stroke-linecap:round}
+.sleeper{stroke:rgba(156,143,184,.4); stroke-width:3}
+.numlab{font-family:var(--display); font-size:17px; fill:var(--dim); text-anchor:middle}
+.numlab.ten{fill:var(--station); font-size:21px}
+.station-post{stroke:var(--station); stroke-width:3}
+.station-sign{fill:#2B1F3E; stroke:var(--station); stroke-width:2.5}
+.station-txt{font-family:var(--display); font-size:15px; fill:var(--station); text-anchor:middle}
+#stationGlow{opacity:0; transition:opacity .5s}
+#stationGlow.on{opacity:1}
+.arc{fill:none; stroke-width:5; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:1}
+.arc.draw{animation:drawArc .75s ease-out forwards}
+@keyframes drawArc{to{stroke-dashoffset:0}}
+#arc1{stroke:var(--hop1)} #arc2{stroke:var(--hop2)}
+.arclab{font-family:var(--display); font-size:19px; text-anchor:middle; opacity:0}
+.arclab.show{animation:popin .4s ease-out forwards}
+@keyframes popin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#lab1{fill:var(--hop1)} #lab2{fill:var(--hop2)}
+#train{transition:transform 1s cubic-bezier(.35,.05,.25,1)}
+.wheel{transform-box:fill-box; transform-origin:center}
+#train.roll .wheel{animation:spin .5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.puff{opacity:0}
+.puff.go{animation:puffUp 1.1s ease-out forwards}
+@keyframes puffUp{0%{opacity:.85;transform:translate(0,0) scale(.4)}100%{opacity:0;transform:translate(-18px,-46px) scale(1.5)}}
+#flag{opacity:0; transform-box:fill-box; transform-origin:bottom center}
+#flag.up{animation:flagUp .5s cubic-bezier(.2,1.5,.4,1) forwards}
+@keyframes flagUp{from{opacity:0;transform:scaleY(0)}to{opacity:1;transform:scaleY(1)}}
+
+/* ---- cargo tokens ---- */
+.cargo{display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap; margin:14px 0 4px}
+.cargo-label{font-family:var(--display); font-size:13px; letter-spacing:1.5px; text-transform:uppercase; color:var(--dim)}
+.tok{width:24px; height:24px; border-radius:50%; background:rgba(255,255,255,.16);
+  border:2.5px solid var(--dim); transition:all .45s cubic-bezier(.2,1.4,.4,1)}
+.tok.h1{background:var(--hop1); border-color:var(--hop1); transform:translateY(-9px) scale(1.12);
+  box-shadow:0 0 14px rgba(63,209,168,.7)}
+.tok.h2{background:var(--hop2); border-color:var(--hop2); box-shadow:0 0 14px rgba(255,177,63,.6)}
+.tok.split{margin-left:20px; position:relative}
+.tok.split::before{content:""; position:absolute; left:-13px; top:-6px; bottom:-6px; width:2px;
+  background:var(--paper); opacity:.5}
+
+/* ---- prompt + pad ---- */
+#prompt{text-align:center; font-family:var(--display); font-size:clamp(17px,4.4vw,22px);
+  letter-spacing:.5px; margin:14px 0 12px; min-height:56px; line-height:1.35}
+#prompt em{font-style:normal; color:var(--station)}
+#prompt small{display:block; font-family:var(--body); font-size:12.5px; font-weight:800; color:var(--dim);
+  letter-spacing:0; margin-top:5px}
+.pad{display:grid; gap:8px; grid-template-columns:repeat(5,1fr)}
+.key{font-family:var(--display); font-weight:500; font-size:clamp(19px,4.8vw,23px); padding:12px 0;
+  border:2px solid rgba(255,255,255,.35); border-radius:11px; background:rgba(255,255,255,.1);
+  color:var(--paper); cursor:pointer; transition:transform .08s, background .15s}
+.key:hover{background:rgba(255,255,255,.22)}
+.key:active,.key.press{transform:translateY(3px)}
+.key:disabled{opacity:.3; cursor:default}
+.key.good{background:var(--hop1); border-color:var(--hop1); color:#06301F}
+.key.bad{background:#E0553F; border-color:#E0553F}
+.pad.wait{opacity:.3; pointer-events:none}
+
+/* ---- equation strip ---- */
+.strip{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+  margin:16px 0 6px; min-height:46px; font-family:var(--display); font-size:clamp(16px,4.2vw,20px);
+  background:rgba(10,6,26,.45); border:1.5px solid rgba(255,255,255,.15); border-radius:12px; padding:11px 12px}
+.strip .part{opacity:0; animation:slidein .45s ease-out forwards}
+@keyframes slidein{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.strip .arrow{color:var(--dim)}
+.strip .g{color:var(--hop1)} .strip .o{color:var(--hop2)} .strip .s{color:var(--station)}
+
+#msg{text-align:center; font-weight:800; font-size:14px; min-height:22px; margin-top:6px; color:var(--dim)}
+#msg.good{color:var(--hop1)} #msg.bad{color:#FF9A85}
+.tools{display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap}
+.tool{font-family:var(--body); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px;
+  border:1.5px solid rgba(255,255,255,.35); background:transparent; color:var(--paper); cursor:pointer}
+.tool:hover{background:rgba(255,255,255,.18)}
+button:focus-visible{outline:3px solid var(--station); outline-offset:3px}
+
+/* helper ten-frame */
+.help{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; max-width:210px; margin:0 auto;
+  opacity:0; max-height:0; overflow:hidden; transition:opacity .3s, max-height .3s}
+.help.show{opacity:1; max-height:110px; margin-bottom:10px}
+.hdot{aspect-ratio:1; border-radius:50%; border:2px solid rgba(255,255,255,.3)}
+.hdot.full{background:var(--paper); border-color:var(--paper)}
+.hdot.need{border-color:var(--hop1); background:rgba(63,209,168,.28); animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+/* end */
+#end{position:fixed; inset:0; background:rgba(20,14,40,.9); display:none; align-items:center;
+  justify-content:center; padding:20px; z-index:50}
+#end.show{display:flex}
+.endcard{background:linear-gradient(180deg,#3B2A5C,#241C46); border:2px solid var(--station);
+  border-radius:20px; padding:26px 24px; text-align:center; max-width:380px; width:100%;
+  animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:500; font-size:24px; letter-spacing:1.5px;
+  text-transform:uppercase; margin:0 0 6px}
+.badges{font-size:30px; letter-spacing:8px; margin:10px 0}
+.badges span{opacity:.2; display:inline-block; transition:all .35s}
+.badges span.on{opacity:1; transform:scale(1.2)}
+.stats{display:flex; justify-content:center; gap:20px; margin:14px 0 18px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-size:24px; color:var(--station)}
+.stat span{font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--dim)}
+.big{font-family:var(--display); font-weight:500; font-size:18px; letter-spacing:1.5px; text-transform:uppercase;
+  padding:13px 28px; border-radius:12px; background:var(--station); color:#3A2000; border:none; cursor:pointer}
+.big:active{transform:translateY(3px)}
+#rec{font-size:12px; font-weight:800; color:var(--dim); margin-top:12px}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important; animation-iteration-count:1 !important}}
+</style>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>The bridge to 10</h1>
+      <p class="sub">10 is the station where every train stops</p>
+    </div>
+    <div class="chips">
+      <div class="chip">Points<b id="score">0</b></div>
+      <div class="chip" id="streakChip">🚂<b id="streak">0</b></div>
+      <div class="chip"><b id="qn">1</b>/8</div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="bar-label">Route</span>
+    <div class="seg" id="lvlSeg">
+      <button data-lvl="easy" class="on">Short</button>
+      <button data-lvl="mid">Medium</button>
+      <button data-lvl="all">Long</button>
+    </div>
+  </div>
+
+  <div class="scene">
+    <svg id="line" viewBox="0 0 700 250" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <g id="axisG"></g>
+      <circle id="stationGlow" cx="0" cy="190" r="38" fill="var(--station)" opacity="0" style="filter:blur(18px)"/>
+      <g id="stationG"></g>
+      <path id="arc1" class="arc" d=""/>
+      <path id="arc2" class="arc" d=""/>
+      <text id="lab1" class="arclab" x="0" y="0"></text>
+      <text id="lab2" class="arclab" x="0" y="0"></text>
+      <g id="flag">
+        <line x1="0" y1="190" x2="0" y2="140" stroke="var(--paper)" stroke-width="3"/>
+        <path d="M0 142 L26 152 L0 162 Z" fill="var(--hop2)"/>
+      </g>
+      <g id="train" transform="translate(0,0)">
+        <circle class="puff" id="puff1" cx="-6" cy="-46" r="8" fill="rgba(255,255,255,.75)"/>
+        <circle class="puff" id="puff2" cx="-2" cy="-52" r="6" fill="rgba(255,255,255,.6)"/>
+        <rect x="-24" y="-34" width="44" height="24" rx="4" fill="#2E7D6B"/>
+        <rect x="-24" y="-46" width="20" height="14" rx="3" fill="#256557"/>
+        <rect x="-20" y="-43" width="12" height="9" rx="2" fill="var(--glow)"/>
+        <rect x="12" y="-48" width="9" height="16" rx="2" fill="#1E4F44"/>
+        <circle class="wheel" cx="-13" cy="-7" r="7" fill="#173A33" stroke="var(--rail)" stroke-width="2"/>
+        <circle class="wheel" cx="8" cy="-7" r="7" fill="#173A33" stroke="var(--rail)" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="cargo">
+    <span class="cargo-label" id="cargoLabel">Cargo</span>
+    <div id="tokens" style="display:flex;gap:9px;flex-wrap:wrap"></div>
+  </div>
+
+  <div id="prompt"></div>
+  <div class="help" id="help"></div>
+  <div class="pad" id="pad"></div>
+  <div id="msg"></div>
+
+  <div class="strip" id="strip"></div>
+
+  <div class="tools">
+    <button class="tool" id="helpBtn">💡 Help</button>
+    <button class="tool" id="restart">↻ Start again</button>
+  </div>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">Station master!</h2>
+    <div class="badges" id="badges"><span>🚂</span><span>🚂</span><span>🚂</span></div>
+    <div class="stats">
+      <div class="stat"><b id="fOk">0</b><span>clean trips</span></div>
+      <div class="stat"><b id="fPts">0</b><span>points</span></div>
+    </div>
+    <button class="big" id="again">Go again</button>
+    <div id="rec"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const QTOTAL=8, Y=190, X0=60, X1=650;
+let level='easy', score=0, streak=0, idx=0, clean=0, tries=0, helpOn=false, record=null;
+let cur=null, step=0;
+
+/* sound */
+let actx=null;
+function beep(f,d=.12,type='sine',v=.13,delay=0){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+function whistle(){ beep(780,.5,'sine',.12); beep(1040,.45,'sine',.09,.06); }
+function chuff(){ for(let i=0;i<4;i++) beep(120,.07,'sawtooth',.06,i*.12); }
+function bell(){ [880,1175,1568].forEach((f,i)=>beep(f,.35,'triangle',.11,i*.1)); }
+
+/* ---------- problem ---------- */
+function newProblem(){
+  const ranges={easy:[8,9],mid:[6,9],all:[5,9]};
+  const [lo,hi]=ranges[level];
+  const a=lo+Math.floor(Math.random()*(hi-lo+1));
+  const need=10-a;
+  const maxRest=Math.min(9-need,9);
+  const rest=1+Math.floor(Math.random()*Math.max(1,maxRest));
+  const b=need+rest;
+  return {a,b,need,rest,total:a+b};
+}
+
+/* ---------- scene drawing ---------- */
+let scale=null;
+function buildAxis(q){
+  const from=Math.max(0,q.a-2), to=Math.min(20,q.total+2);
+  scale=n=>X0+(n-from)/(to-from)*(X1-X0);
+  const g=$('axisG'); g.innerHTML='';
+  const ns=document.createElementNS('http://www.w3.org/2000/svg','line');
+  ns.setAttribute('x1',X0-8);ns.setAttribute('y1',Y);ns.setAttribute('x2',X1+8);ns.setAttribute('y2',Y);
+  ns.setAttribute('class','axis'); g.appendChild(ns);
+  for(let n=from;n<=to;n++){
+    const x=scale(n);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','line');
+    t.setAttribute('x1',x);t.setAttribute('y1',Y-9);t.setAttribute('x2',x);t.setAttribute('y2',Y+9);
+    t.setAttribute('class',n===10?'axis':'tick'); g.appendChild(t);
+    const tx=document.createElementNS('http://www.w3.org/2000/svg','text');
+    tx.setAttribute('x',x);tx.setAttribute('y',Y+32);
+    tx.setAttribute('class','numlab'+(n===10?' ten':'')); tx.textContent=n; g.appendChild(tx);
+  }
+  // station sign at 10
+  const sx=scale(10), sg=$('stationG'); sg.innerHTML='';
+  sg.innerHTML=`<line x1="${sx}" y1="${Y}" x2="${sx}" y2="${Y-92}" class="station-post"/>
+    <rect x="${sx-32}" y="${Y-118}" width="64" height="26" rx="5" class="station-sign"/>
+    <text x="${sx}" y="${Y-99}" class="station-txt">STATION</text>`;
+  $('stationGlow').setAttribute('cx',sx);
+  $('stationGlow').classList.remove('on');
+  $('flag').setAttribute('transform',`translate(${scale(q.total)},0)`);
+  $('flag').classList.remove('up');
+  moveTrain(q.a,false);
+  ['arc1','arc2'].forEach(id=>{const e=$(id); e.setAttribute('d',''); e.classList.remove('draw');});
+  ['lab1','lab2'].forEach(id=>$(id).classList.remove('show'));
+}
+
+function moveTrain(n,animate=true){
+  const t=$('train');
+  t.style.transition = animate? 'transform 1s cubic-bezier(.35,.05,.25,1)' : 'none';
+  t.setAttribute('transform',`translate(${scale(n)},${Y})`);
+  if(animate){
+    t.classList.add('roll'); chuff();
+    ['puff1','puff2'].forEach((p,i)=>{const e=$(p); e.classList.remove('go'); void e.offsetWidth;
+      setTimeout(()=>e.classList.add('go'),i*180);});
+    setTimeout(()=>t.classList.remove('roll'),1000);
+  }
+}
+function drawArc(id,labId,fromN,toN,txt){
+  const x1=scale(fromN), x2=scale(toN), mid=(x1+x2)/2, h=Y-64;
+  const p=$(id); p.setAttribute('d',`M ${x1} ${Y-14} Q ${mid} ${h} ${x2} ${Y-14}`);
+  p.setAttribute('pathLength','1'); p.classList.remove('draw'); void p.getBBox();
+  p.classList.add('draw');
+  const l=$(labId); l.setAttribute('x',mid); l.setAttribute('y',h+6); l.textContent=txt;
+  l.classList.remove('show'); void l.getBBox(); setTimeout(()=>l.classList.add('show'),350);
+}
+
+/* ---------- tokens ---------- */
+function drawTokens(state){
+  const box=$('tokens'); box.innerHTML='';
+  for(let i=0;i<cur.b;i++){
+    const d=document.createElement('div'); d.className='tok';
+    if(state>=1 && i<cur.need) d.classList.add('h1');
+    if(state>=2 && i>=cur.need) d.classList.add('h2');
+    if(state>=1 && i===cur.need) d.classList.add('split');
+    box.appendChild(d);
+  }
+}
+
+/* ---------- strip ---------- */
+function buildStrip(state){
+  const s=$('strip'); s.innerHTML='';
+  const add=(html,cls='')=>{const d=document.createElement('span'); d.className='part '+cls; d.innerHTML=html; s.appendChild(d);};
+  add(`${cur.a} + ${cur.b}`);
+  if(state>=1){ add('→','arrow'); add(`${cur.a} + <span class="g">${cur.need}</span> + <span class="o">${state>=2?cur.rest:'?'}</span>`); }
+  if(state>=3){ add('→','arrow'); add(`<span class="s">10</span> + <span class="o">${cur.rest}</span> = <span class="s">${cur.total}</span>`); }
+}
+
+/* ---------- prompts ---------- */
+function renderStep(){
+  const p=$('prompt');
+  if(step===0){
+    p.innerHTML=`The train starts at <em>${cur.a}</em> and has to do <em>+${cur.b}</em>.<br>How many does it need to reach station <em>10</em>?<small>These are the bonds to 10 you already know</small>`;
+    renderPad(1,9);
+  } else if(step===1){
+    p.innerHTML=`You have used <em>${cur.need}</em> of your <em>${cur.b}</em>.<br>How many are left for the second part of the bridge?`;
+    renderPad(1,9);
+  } else {
+    p.innerHTML=`You are at station <em>10</em> with <em>${cur.rest}</em> left.<br>Where does the train arrive?<small>10 + ${cur.rest}</small>`;
+    renderPad(11,19);
+  }
+  updateHelp();
+}
+function renderPad(from,to){
+  const pad=$('pad'); pad.innerHTML=''; pad.classList.remove('wait');
+  for(let n=from;n<=to;n++){
+    const b=document.createElement('button');
+    b.className='key'; b.textContent=n; b.dataset.n=n;
+    b.addEventListener('click',()=>answer(n,b));
+    pad.appendChild(b);
+  }
+}
+function updateHelp(){
+  const h=$('help');
+  h.classList.toggle('show',helpOn);
+  if(!helpOn) return;
+  h.innerHTML='';
+  const filled = step===0? cur.a : (step===1? cur.need : 10);
+  const total = step===1? cur.b : 10;
+  for(let i=0;i<total;i++){
+    const d=document.createElement('div');
+    d.className='hdot'+(i<filled?' full':' need');
+    h.appendChild(d);
+  }
+}
+
+/* ---------- flow ---------- */
+function startProblem(){
+  if(idx>=QTOTAL){ finish(); return; }
+  cur=newProblem(); step=0; tries=0;
+  $('qn').textContent=idx+1;
+  $('msg').textContent=''; $('msg').className='';
+  $('cargoLabel').textContent='Cargo: '+cur.b;
+  buildAxis(cur); drawTokens(0); buildStrip(0); renderStep();
+}
+
+function answer(n,btn){
+  const want = step===0? cur.need : step===1? cur.rest : cur.total;
+  if(n===want){
+    btn.classList.add('good');
+    $('pad').classList.add('wait');
+    beep(660,.1,'triangle'); beep(990,.14,'triangle',.11,.07);
+    if(step===0){
+      drawTokens(1); buildStrip(1);
+      drawArc('arc1','lab1',cur.a,10,'+'+cur.need);
+      setTimeout(()=>{ moveTrain(10); },250);
+      setTimeout(()=>{ whistle(); $('stationGlow').classList.add('on');
+        $('msg').textContent='Stop at station 10!'; $('msg').className='good'; },1150);
+      step=1; setTimeout(()=>{ $('msg').textContent=''; $('msg').className=''; renderStep(); },1900);
+    } else if(step===1){
+      drawTokens(2); buildStrip(2);
+      $('msg').textContent=`The ${cur.b} split into ${cur.need} and ${cur.rest}.`; $('msg').className='good';
+      step=2; setTimeout(()=>{ $('msg').textContent=''; $('msg').className=''; renderStep(); },1300);
+    } else {
+      drawArc('arc2','lab2',10,cur.total,'+'+cur.rest);
+      setTimeout(()=>moveTrain(cur.total),250);
+      setTimeout(()=>{ $('flag').classList.add('up'); bell(); buildStrip(3); },1200);
+      const perfect = tries===0;
+      if(perfect){ clean++; streak++; score+=20; } else { streak=0; score+=8; }
+      $('score').textContent=score; $('streak').textContent=streak;
+      $('streakChip').classList.toggle('hot',streak>=3);
+      $('msg').textContent = perfect? ['Arrived!','Perfect trip!','Bridge crossed!'][Math.floor(Math.random()*3)] : 'Arrived.';
+      $('msg').className='good';
+      idx++;
+      setTimeout(startProblem,2400);
+    }
+  } else {
+    tries++; streak=0; $('streak').textContent=0; $('streakChip').classList.remove('hot');
+    btn.classList.add('bad'); btn.disabled=true;
+    beep(180,.2,'sawtooth',.1);
+    const tips=[
+      `From ${cur.a}, how many steps to 10?`,
+      `You have ${cur.b} altogether and you already used ${cur.need}.`,
+      `Ten and ${cur.rest} more: it is a number that starts with one.`
+    ];
+    $('msg').textContent=tips[step]; $('msg').className='bad';
+    if(!helpOn){ helpOn=true; $('helpBtn').style.opacity=1; updateHelp(); }
+  }
+}
+
+/* ---------- end ---------- */
+function finish(){
+  const b = clean>=7?3 : clean>=5?2 : 1;
+  $('fOk').textContent=clean+'/'+QTOTAL; $('fPts').textContent=score;
+  $('endTitle').textContent = b===3?'Station master!' : b===2?'Great trip!' : 'On the move!';
+  const row=$('badges').children; [...row].forEach(s=>s.classList.remove('on'));
+  for(let i=0;i<b;i++) setTimeout(()=>{row[i].classList.add('on'); beep(600+i*200,.25,'triangle',.12);},350+i*270);
+  $('end').classList.add('show');
+  saveRecord();
+}
+async function saveRecord(){
+  const key='ponte10:record:en'; let prev=null;
+  try{ const r=await window.storage.get(key); prev=r?JSON.parse(r.value):null; }catch(e){ prev=record; }
+  if(!prev||score>prev.score){
+    record={score,clean,date:new Date().toLocaleDateString('en-GB')};
+    try{ await window.storage.set(key,JSON.stringify(record)); }catch(e){}
+    $('rec').textContent='🏆 New best!';
+  } else { record=prev; $('rec').textContent='Best: '+prev.score+' points ('+prev.date+')'; }
+}
+
+/* ---------- controls ---------- */
+$('lvlSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('lvlSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); level=b.dataset.lvl;
+});
+$('helpBtn').addEventListener('click',()=>{ helpOn=!helpOn; updateHelp(); });
+$('restart').addEventListener('click',reset);
+$('again').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{
+  const n=parseInt(e.key,10); if(isNaN(n)) return;
+  const b=[...document.querySelectorAll('.key')].find(k=>+k.dataset.n===n&&!k.disabled);
+  if(b && !$('pad').classList.contains('wait')){ b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); answer(n,b); }
+});
+
+function reset(){
+  score=0; streak=0; idx=0; clean=0;
+  $('score').textContent=0; $('streak').textContent=0;
+  $('streakChip').classList.remove('hot');
+  $('end').classList.remove('show');
+  startProblem();
+}
+reset();
+</script>

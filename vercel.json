@@ -1,0 +1,11 @@
+{
+  "redirects": [
+    { "source": "/casa-del-10.html", "destination": "/it/casa-del-10.html", "permanent": true },
+    { "source": "/ponte-del-10.html", "destination": "/it/ponte-del-10.html", "permanent": true },
+    { "source": "/colpo-docchio.html", "destination": "/it/colpo-docchio.html", "permanent": true },
+    { "source": "/parte-parte-tutto.html", "destination": "/it/parte-parte-tutto.html", "permanent": true },
+    { "source": "/quanto-manca-salita.html", "destination": "/it/quanto-manca-salita.html", "permanent": true },
+    { "source": "/specchio-dei-doppi.html", "destination": "/it/specchio-dei-doppi.html", "permanent": true },
+    { "source": "/catene-vero-falso.html", "destination": "/it/catene-vero-falso.html", "permanent": true }
+  ]
+}

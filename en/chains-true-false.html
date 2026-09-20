@@ -1,0 +1,481 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chains and True / False</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg-1:#1E1B18; --bg-2:#2B2622; --panel:#332D28; --edge:#4A423B;
+  --paper:#F3EDE4; --dim:#A2968A;
+  --amber:#F2A03d; --amber-soft:#FFD79A; --amber-dark:#B9701C;
+  --green:#4FBF8B; --red:#E4614A; --steel:#8FA3B0;
+  --display:'DM Mono', ui-monospace, 'Courier New', monospace;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--body); color:var(--paper); min-height:100%;
+  background:linear-gradient(180deg,var(--bg-1),var(--bg-2)); background-attachment:fixed;
+  display:flex; justify-content:center; padding:16px 14px 34px}
+#app{width:100%; max-width:600px}
+
+header{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap}
+h1{font-family:var(--display); font-weight:500; font-size:clamp(19px,4.6vw,26px); margin:0; letter-spacing:-.5px}
+.sub{font-size:12.5px; font-weight:800; color:var(--dim); margin:3px 0 0}
+.chips{display:flex; gap:6px; flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.07); border:1.5px solid var(--edge); border-radius:8px;
+  padding:5px 10px; font-size:11.5px; font-weight:800}
+.chip b{font-family:var(--display); font-size:14px; color:var(--amber); margin-left:3px}
+.chip.hot{background:var(--amber); color:#2B1A05; border-color:var(--amber)}
+.chip.hot b{color:#2B1A05}
+
+.bar{display:flex; gap:8px; align-items:center; margin:13px 0 10px; flex-wrap:wrap}
+.bar-label{font-family:var(--display); font-size:10.5px; letter-spacing:1.6px; text-transform:uppercase; color:var(--dim)}
+.seg{display:flex; border:1.5px solid var(--edge); border-radius:9px; overflow:hidden}
+.seg button{font-family:var(--body); font-weight:800; font-size:11.5px; padding:7px 12px; border:none;
+  background:transparent; color:var(--paper); cursor:pointer; border-right:1.5px solid var(--edge)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--amber); color:#2B1A05}
+
+/* ---- stage ---- */
+.stage{background:var(--panel); border:1.5px solid var(--edge); border-radius:16px;
+  padding:20px 12px; min-height:150px; display:flex; align-items:center; justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.stage.shake{animation:shake .38s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}60%{transform:translateX(7px)}}
+
+/* chain */
+.chain{display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap}
+.link{font-family:var(--display); font-weight:500; font-size:clamp(20px,5.4vw,28px);
+  min-width:64px; height:60px; display:flex; align-items:center; justify-content:center;
+  border:2.5px solid var(--steel); border-radius:12px; background:rgba(143,163,176,.12)}
+.link.start{border-color:var(--dim); color:var(--dim)}
+.link.open{border-color:var(--amber); border-style:dashed; color:var(--amber); background:rgba(242,160,61,.1)}
+.link.open.cursor{animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{box-shadow:0 0 0 0 rgba(242,160,61,.5)}50%{box-shadow:0 0 0 8px rgba(242,160,61,0)}}
+.link.filled{border-style:solid; border-color:var(--green); background:rgba(79,191,139,.16); color:var(--paper);
+  animation:clank .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes clank{0%{transform:scale(.6) rotate(-6deg)}100%{transform:scale(1) rotate(0)}}
+.wire{display:flex; flex-direction:column; align-items:center; min-width:52px; position:relative}
+.wire .op{font-family:var(--display); font-weight:500; font-size:clamp(15px,3.8vw,19px); color:var(--amber); margin-bottom:2px}
+.wire .track{width:100%; height:4px; border-radius:3px; background:var(--edge); position:relative; overflow:hidden}
+.wire.live .track::after{content:""; position:absolute; inset:0; border-radius:3px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent); animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.wire.done .track{background:var(--green)}
+
+/* statement */
+.stmt{text-align:center}
+.stmt .txt{font-family:var(--display); font-weight:500; font-size:clamp(24px,6.6vw,36px); letter-spacing:1px}
+.stmt .star{color:var(--amber); font-size:14px; letter-spacing:2px; font-family:var(--body); font-weight:800; margin-bottom:6px}
+.stmt.yes .txt{color:var(--green)} .stmt.no .txt{color:var(--red)}
+.sides{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px;
+  opacity:0; max-height:0; overflow:hidden; transition:opacity .4s, max-height .4s}
+.sides.show{opacity:1; max-height:80px}
+.sidebox{font-family:var(--display); font-size:clamp(15px,3.8vw,19px); padding:8px 12px; border-radius:10px;
+  border:2px solid var(--edge); background:rgba(255,255,255,.05)}
+.sidebox b{color:var(--amber)}
+.balsign{font-family:var(--display); font-size:22px; color:var(--dim)}
+.balsign.eq{color:var(--green)} .balsign.ne{color:var(--red)}
+
+/* prompt / rule */
+#prompt{text-align:center; font-family:var(--display); font-weight:500; font-size:clamp(14px,3.7vw,18px);
+  min-height:44px; margin:14px 0 4px; line-height:1.45}
+#prompt em{font-style:normal; color:var(--amber)}
+#prompt small{display:block; font-family:var(--body); font-size:12px; font-weight:800; color:var(--dim); margin-top:4px; letter-spacing:0}
+.rule{border:1.5px dashed var(--edge); border-radius:11px; padding:9px 12px; text-align:center;
+  font-size:13px; font-weight:800; color:var(--dim); min-height:40px; display:flex; align-items:center; justify-content:center; line-height:1.35}
+.rule b{color:var(--amber)} .rule .g{color:var(--green)} .rule .r{color:var(--red)}
+
+/* vf buttons */
+.vf{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.vfbtn{font-family:var(--display); font-weight:500; font-size:26px; padding:16px 0; border:2px solid var(--edge);
+  border-radius:14px; background:rgba(255,255,255,.07); color:var(--paper); cursor:pointer}
+.vfbtn small{display:block; font-family:var(--body); font-size:11.5px; font-weight:800; color:var(--dim); margin-top:2px}
+.vfbtn:hover{background:rgba(255,255,255,.15)}
+.vfbtn:active{transform:translateY(3px)}
+.vfbtn.good{background:var(--green); border-color:var(--green); color:#06301F}
+.vfbtn.good small{color:rgba(0,0,0,.55)}
+.vfbtn.bad{background:var(--red); border-color:var(--red); color:#fff}
+.vfbtn.bad small{color:rgba(255,255,255,.8)}
+
+/* keypad */
+.pad{display:grid; gap:7px; grid-template-columns:repeat(5,1fr)}
+.key{font-family:var(--display); font-weight:500; font-size:clamp(15px,3.8vw,19px); padding:11px 0;
+  border:2px solid var(--edge); border-radius:10px; background:rgba(255,255,255,.07); color:var(--paper);
+  cursor:pointer; transition:transform .07s, background .15s}
+.key:hover{background:rgba(255,255,255,.17)}
+.key:active,.key.press{transform:translateY(3px)}
+.key:disabled{opacity:.28; cursor:default}
+.key.good{background:var(--green); border-color:var(--green); color:#06301F}
+.key.bad{background:var(--red); border-color:var(--red); color:#fff}
+.pad.wait,.vf.wait{opacity:.32; pointer-events:none}
+.hide{display:none !important}
+.stack{display:flex; flex-direction:column; gap:11px; margin-top:11px}
+
+#msg{text-align:center; font-weight:800; font-size:13.5px; min-height:22px; color:var(--dim)}
+#msg.good{color:var(--green)} #msg.bad{color:var(--red)}
+.tools{display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+.tool{font-family:var(--body); font-weight:800; font-size:12.5px; padding:8px 15px; border-radius:999px;
+  border:1.5px solid var(--edge); background:transparent; color:var(--paper); cursor:pointer}
+.tool:hover{background:rgba(255,255,255,.15)}
+button:focus-visible{outline:3px solid var(--amber); outline-offset:3px}
+
+/* end */
+#end{position:fixed; inset:0; background:rgba(20,17,15,.92); display:none; align-items:center;
+  justify-content:center; padding:20px; z-index:50}
+#end.show{display:flex}
+.endcard{background:var(--panel); border:2px solid var(--amber); border-radius:20px; padding:26px 24px;
+  text-align:center; max-width:380px; width:100%; animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:500; font-size:22px; margin:0 0 6px}
+.gears{font-size:28px; letter-spacing:8px; margin:10px 0}
+.gears span{opacity:.2; display:inline-block; transition:all .35s}
+.gears span.on{opacity:1; transform:scale(1.2) rotate(20deg)}
+.stats{display:flex; justify-content:center; gap:20px; margin:14px 0 18px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-weight:500; font-size:24px; color:var(--amber)}
+.stat span{font-size:10.5px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--dim)}
+.big{font-family:var(--display); font-weight:500; font-size:17px; padding:12px 26px; border-radius:12px;
+  background:var(--amber); color:#2B1A05; border:none; cursor:pointer}
+.big:active{transform:translateY(3px)}
+
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms !important; animation-iteration-count:1 !important}}
+</style>
+
+<div id="app">
+  <header>
+    <div>
+      <h1>Chains and True / False</h1>
+      <p class="sub">In a chain you go left to right · always write the middle number</p>
+    </div>
+    <div class="chips">
+      <div class="chip">Points<b id="score">0</b></div>
+      <div class="chip" id="streakChip">⚙<b id="streak">0</b></div>
+      <div class="chip"><b id="qn">1</b>/<span id="qtot">10</span></div>
+    </div>
+  </header>
+
+  <div class="bar">
+    <span class="bar-label">Exercise</span>
+    <div class="seg" id="modeSeg">
+      <button data-m="chain" class="on">Chains</button>
+      <button data-m="vf">True or false</button>
+      <button data-m="mix">Mixed</button>
+    </div>
+    <span class="bar-label">Links</span>
+    <div class="seg" id="lenSeg">
+      <button data-l="2" class="on">2</button>
+      <button data-l="3">3</button>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="chain hide" id="chain"></div>
+    <div class="stmt hide" id="stmt">
+      <div class="star hide" id="star">★ look at both sides</div>
+      <div class="txt" id="stmtTxt"></div>
+      <div class="sides" id="sides"></div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div id="prompt"></div>
+    <div class="rule" id="rule"></div>
+    <div class="vf hide" id="vf">
+      <button class="vfbtn" data-v="1">T<small>it is true</small></button>
+      <button class="vfbtn" data-v="0">F<small>it is false</small></button>
+    </div>
+    <div class="pad hide" id="pad"></div>
+    <div id="msg"></div>
+    <div class="tools">
+      <button class="tool" id="restart">↻ Start again</button>
+    </div>
+  </div>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">Shift over</h2>
+    <div class="gears" id="gears"><span>⚙</span><span>⚙</span><span>⚙</span></div>
+    <div class="stats">
+      <div class="stat"><b id="fOk">0</b><span>first try</span></div>
+      <div class="stat"><b id="fPts">0</b><span>points</span></div>
+    </div>
+    <button class="big" id="again">Again</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let mode='chain', chainLen=2, TOTAL=10;
+let score=0, streak=0, idx=0, clean=0, tries=0, cur=null, phase='';
+
+/* sound */
+let actx=null;
+function beep(f,d=.12,type='sine',v=.13,delay=0){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+delay;
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+const yes=()=>{beep(660,.1,'triangle');beep(990,.15,'triangle',.11,.07)};
+const no=()=>beep(180,.2,'sawtooth',.1);
+const clank=()=>{beep(300,.08,'square',.07);beep(180,.12,'square',.05,.04)};
+const ding=()=>[660,880,1175].forEach((f,i)=>beep(f,.28,'triangle',.11,i*.09));
+
+/* ---------- generators ---------- */
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+
+function newChain(len){
+  let v=rnd(5,9), steps=[], vals=[v];
+  for(let i=0;i<len;i++){
+    let op,n,nv,guard=0;
+    do{
+      op=Math.random()<.5?'+':'−';
+      n=rnd(2,9);
+      nv = op==='+'? v+n : v-n;
+      guard++;
+    } while((nv<2||nv>20||nv===v)&&guard<40);
+    if(nv<2||nv>20){ op='+'; n=2; nv=v+2; }
+    steps.push({op,n}); vals.push(nv); v=nv;
+  }
+  return {type:'chain',start:vals[0],steps,vals,at:1};
+}
+
+function newVF(){
+  const rel = Math.random()<.4;
+  if(rel){
+    const a=rnd(4,9), b=rnd(4,9), w=a+b;
+    const kinds=[
+      ()=>({l:[a,'+',b],r:[b,'+',a],truth:true,why:'Same numbers swapped round: the total does not change.'}),
+      ()=>({l:[a,'+',b],r:[a+1,'+',b-1],truth:true,why:'One more here, one less there: it balances out.'}),
+      ()=>({l:[a,'+',b],r:[a+1,'+',b],truth:false,why:'On the right there is one more and nothing less.'}),
+      ()=>({l:[a,'+',b],r:[10,'+',(w-10)],truth:w>10,why:w>10?'On the right it is the same number split with 10.':'The right side does not match.'})
+    ];
+    let k=kinds[Math.floor(Math.random()*kinds.length)]();
+    if(k.r[0]<1||k.r[2]<1) k=kinds[0]();
+    const lv=k.l[0]+k.l[2], rv=k.r[0]+k.r[2];
+    return {type:'rel',txt:`${k.l[0]} + ${k.l[2]} = ${k.r[0]} + ${k.r[2]}`,truth:lv===rv,why:k.why,lv,rv,
+            lTxt:`${k.l[0]} + ${k.l[2]}`, rTxt:`${k.r[0]} + ${k.r[2]}`};
+  }
+  const plus=Math.random()<.55;
+  let a,b,real;
+  if(plus){ a=rnd(4,9); b=rnd(4,9); real=a+b; }
+  else { real=rnd(3,9); b=rnd(4,9); a=real+b; }
+  const truth=Math.random()<.5;
+  const off=[1,1,2,-1,-1,-2][Math.floor(Math.random()*6)];
+  const shown = truth? real : Math.max(1,real+off);
+  return {type:'calc',txt:`${a} ${plus?'+':'−'} ${b} = ${shown}`,truth:shown===real,real,shown};
+}
+
+/* ---------- render ---------- */
+function showStage(which){
+  $('chain').classList.toggle('hide',which!=='chain');
+  $('stmt').classList.toggle('hide',which!=='stmt');
+}
+function renderChain(){
+  const c=$('chain'); c.innerHTML='';
+  const mk=(cls,txt)=>{const d=document.createElement('div'); d.className='link '+cls; d.textContent=txt; return d;};
+  c.appendChild(mk('start',cur.start));
+  cur.steps.forEach((s,i)=>{
+    const w=document.createElement('div');
+    const state = i+1<cur.at? 'done' : (i+1===cur.at?'live':'');
+    w.className='wire '+state;
+    w.innerHTML=`<div class="op">${s.op}${s.n}</div><div class="track"></div>`;
+    c.appendChild(w);
+    const done=i+1<cur.at;
+    c.appendChild(mk(done?'filled':(i+1===cur.at?'open cursor':'open'), done?cur.vals[i+1]:'?'));
+  });
+}
+function renderPad(from,to){
+  const p=$('pad'); p.innerHTML=''; p.classList.remove('wait','hide');
+  for(let n=from;n<=to;n++){
+    const b=document.createElement('button');
+    b.className='key'; b.textContent=n; b.dataset.n=n;
+    b.addEventListener('click',()=>onNumber(n,b));
+    p.appendChild(b);
+  }
+}
+function setRule(h){ $('rule').innerHTML=h; }
+function award(perfect,pts=15){
+  if(perfect){ clean++; streak++; score+=pts; } else { streak=0; score+=Math.round(pts*.4); }
+  $('score').textContent=score; $('streak').textContent=streak;
+  $('streakChip').classList.toggle('hot',streak>=4);
+}
+function shakeStage(){ $('stage').classList.add('shake'); setTimeout(()=>$('stage').classList.remove('shake'),380); }
+
+/* ---------- start ---------- */
+function startChain(){
+  cur=newChain(chainLen); tries=0; phase='chain';
+  showStage('chain'); renderChain();
+  $('vf').classList.add('hide');
+  const s=cur.steps[0];
+  $('prompt').innerHTML=`What is <em>${cur.start} ${s.op} ${s.n}</em>?<small>Fill in the middle link before you move on</small>`;
+  setRule('One link at a time, from left to right.');
+  renderPad(1,20);
+}
+function startVF(){
+  cur=newVF(); tries=0; phase='vf';
+  showStage('stmt');
+  $('stmt').className='stmt';
+  $('stmtTxt').textContent=cur.txt;
+  $('star').classList.toggle('hide',cur.type!=='rel');
+  $('sides').classList.remove('show'); $('sides').innerHTML='';
+  $('prompt').innerHTML=`Is this number sentence <em>true</em> or <em>false</em>?`;
+  setRule(cur.type==='rel'
+    ? 'Equals means <b>the same value</b> on the right and on the left.'
+    : 'Work the sum out in your head, then decide.');
+  $('pad').classList.add('hide');
+  const vf=$('vf'); vf.classList.remove('hide','wait');
+  [...vf.children].forEach(b=>{b.classList.remove('good','bad'); b.disabled=false;});
+}
+
+/* ---------- answers ---------- */
+function onNumber(n,btn){
+  if(phase==='chain'){
+    if(n===cur.vals[cur.at]){
+      btn.classList.add('good'); $('pad').classList.add('wait'); yes(); clank();
+      cur.at++; renderChain();
+      if(cur.at>cur.steps.length){
+        award(tries===0, chainLen===3?22:15); ding();
+        $('msg').textContent = tries===0? ['Chain complete!','Ran smoothly!','Perfect!'][Math.floor(Math.random()*3)] : 'Completed.';
+        $('msg').className='good';
+        setRule(`The chain: <b>${cur.vals.join(' → ')}</b>`);
+        idx++; setTimeout(next,2000);
+      } else {
+        const s=cur.steps[cur.at-1];
+        $('msg').textContent=''; $('msg').className='';
+        setTimeout(()=>{
+          $('prompt').innerHTML=`Now <em>${cur.vals[cur.at-1]} ${s.op} ${s.n}</em>.<small>Start from the number you have just written</small>`;
+          renderPad(1,20);
+        },700);
+      }
+    } else {
+      tries++; btn.classList.add('bad'); btn.disabled=true; no(); shakeStage();
+      const s=cur.steps[cur.at-1];
+      $('msg').textContent = s.op==='+' ? `Start from ${cur.vals[cur.at-1]} and go up by ${s.n}.`
+                                        : `Start from ${s.n} and climb up to ${cur.vals[cur.at-1]}.`;
+      $('msg').className='bad';
+    }
+    return;
+  }
+  /* correction after a false statement */
+  if(phase==='fix'){
+    if(n===cur.real){
+      btn.classList.add('good'); $('pad').classList.add('wait'); yes();
+      $('stmtTxt').textContent=cur.txt.replace(/=\s*\d+$/,'= '+cur.real);
+      $('stmt').className='stmt yes';
+      award(cur.judged===cur.truth && tries===0);
+      $('msg').textContent = cur.truth
+        ? `It really did say ${cur.real}: the sentence was true.`
+        : 'Corrected!';
+      $('msg').className='good'; ding();
+      idx++; setTimeout(next,2300);
+    } else {
+      tries++; btn.classList.add('bad'); btn.disabled=true; no(); shakeStage();
+      $('msg').textContent='Not yet. Work it out again slowly.'; $('msg').className='bad';
+    }
+  }
+}
+
+function onVF(said){
+  if(phase!=='vf') return;
+  const btn=[...$('vf').children].find(b=>+b.dataset.v===(said?1:0));
+  const right = said===cur.truth;
+  cur.judged=said;
+  if(right){ btn.classList.add('good'); yes(); } else { btn.classList.add('bad'); no(); shakeStage(); }
+  $('vf').classList.add('wait');
+
+  if(cur.type==='rel'){
+    $('sides').innerHTML=`<div class="sidebox">${cur.lTxt} = <b>${cur.lv}</b></div>
+      <span class="balsign ${cur.lv===cur.rv?'eq':'ne'}">${cur.lv===cur.rv?'=':'≠'}</span>
+      <div class="sidebox">${cur.rTxt} = <b>${cur.rv}</b></div>`;
+    $('sides').classList.add('show');
+    $('stmt').className='stmt '+(cur.truth?'yes':'no');
+    setRule(cur.why);
+    award(right,20);
+    $('msg').textContent = right? 'Correct.' : (cur.truth?'It was true.':'It was false.');
+    $('msg').className = right?'good':'bad';
+    if(right) ding();
+    idx++; setTimeout(next,2600);
+    return;
+  }
+
+  /* calc type */
+  if(said===false || !right){
+    phase='fix'; tries = right?0:1;
+    $('prompt').innerHTML = right
+      ? `Good. So <em>what does it really make</em>?`
+      : `Look again: <em>what does it really make</em>?`;
+    setRule('If you say «it is false», you have to be able to say the right number.');
+    $('vf').classList.add('hide');
+    setTimeout(()=>renderPad(1,20),400);
+  } else {
+    $('stmt').className='stmt yes';
+    award(true,15); ding();
+    $('msg').textContent='True, and you spotted it straight away.'; $('msg').className='good';
+    idx++; setTimeout(next,1900);
+  }
+}
+
+/* ---------- flow ---------- */
+function next(){
+  if(idx>=TOTAL){ finish(); return; }
+  $('qn').textContent=idx+1;
+  $('msg').textContent=''; $('msg').className='';
+  $('pad').classList.add('hide');
+  if(mode==='chain') startChain();
+  else if(mode==='vf') startVF();
+  else (Math.random()<.5? startChain(): startVF());
+}
+function finish(){
+  const g = clean>=TOTAL-1?3 : clean>=TOTAL-3?2 : 1;
+  $('fOk').textContent=clean+'/'+TOTAL; $('fPts').textContent=score;
+  $('endTitle').textContent = g===3?'Perfect machine!' : g===2?'Running well!' : 'Getting it going';
+  const row=$('gears').children; [...row].forEach(s=>s.classList.remove('on'));
+  for(let i=0;i<g;i++) setTimeout(()=>{row[i].classList.add('on'); beep(600+i*200,.25,'triangle',.12);},350+i*260);
+  $('end').classList.add('show');
+}
+
+/* ---------- controls ---------- */
+$('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('modeSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.m; reset();
+});
+$('lenSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  [...$('lenSeg').children].forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); chainLen=+b.dataset.l; reset();
+});
+$('vf').addEventListener('click',e=>{
+  const b=e.target.closest('.vfbtn'); if(!b||b.disabled) return;
+  onVF(b.dataset.v==='1');
+});
+$('restart').addEventListener('click',reset);
+$('again').addEventListener('click',reset);
+document.addEventListener('keydown',e=>{
+  if(e.key==='t'||e.key==='T'){ const b=$('vf').children[0]; if(!$('vf').classList.contains('hide')&&!$('vf').classList.contains('wait')) onVF(true); return; }
+  if(e.key==='f'||e.key==='F'){ if(!$('vf').classList.contains('hide')&&!$('vf').classList.contains('wait')) onVF(false); return; }
+  const n=parseInt(e.key,10); if(isNaN(n)) return;
+  const b=[...document.querySelectorAll('.key')].find(k=>+k.dataset.n===n&&!k.disabled);
+  if(b && !$('pad').classList.contains('wait') && !$('pad').classList.contains('hide')){
+    b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),90); onNumber(n,b);
+  }
+});
+
+function reset(){
+  score=0; streak=0; idx=0; clean=0;
+  $('score').textContent=0; $('streak').textContent=0;
+  $('streakChip').classList.remove('hot');
+  $('end').classList.remove('show');
+  next();
+}
+reset();
+</script>

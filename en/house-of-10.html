@@ -1,0 +1,550 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The house of 10 — Nam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --night-1:#0C1E36; --night-2:#1E3F63; --night-3:#2E5679;
+  --snow:#E9F1F7; --snow-dim:#B9CBDB;
+  --wall:#A6392F; --wall-dark:#7E2A22; --wall-light:#BE4738;
+  --roof:#1A2A3D; --frame:#F4E7D2;
+  --glass-off:#16304F; --lit:#FFC24A; --lit-soft:#FFE9B0;
+  --aurora-1:#4FE3AE; --aurora-2:#79C4FF; --aurora-3:#C69BFF;
+  --ink:#0B1A2C;
+  --display:'Fredoka', ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+  --body:'Nunito', ui-rounded, system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:var(--body);
+  background:radial-gradient(120% 90% at 50% 0%, var(--night-3) 0%, var(--night-2) 38%, var(--night-1) 100%);
+  color:var(--snow); overflow-x:hidden; min-height:100%;
+}
+
+/* ---------- sky: snow + aurora ---------- */
+#sky{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+.flake{position:absolute; top:-20px; color:#fff; opacity:.55; animation:fall linear infinite}
+@keyframes fall{
+  0%{transform:translateY(-20px) translateX(0) rotate(0deg)}
+  100%{transform:translateY(105vh) translateX(var(--drift)) rotate(220deg)}
+}
+#aurora{position:absolute; inset:0; opacity:0; transition:opacity 1.6s ease}
+#aurora.on{opacity:.75}
+.band{
+  position:absolute; left:-25%; width:150%; height:230px; filter:blur(38px);
+  border-radius:50%; mix-blend-mode:screen;
+}
+.b1{top:-70px; background:linear-gradient(90deg,transparent,var(--aurora-1),transparent); animation:wave 9s ease-in-out infinite}
+.b2{top:10px; background:linear-gradient(90deg,transparent,var(--aurora-2),transparent); animation:wave 12s ease-in-out infinite reverse}
+.b3{top:-30px; background:linear-gradient(90deg,transparent,var(--aurora-3),transparent); opacity:.6; animation:wave 15s ease-in-out infinite}
+@keyframes wave{
+  0%,100%{transform:translateX(-6%) skewY(-3deg) scaleY(1)}
+  50%{transform:translateX(6%) skewY(3deg) scaleY(1.25)}
+}
+
+/* ---------- layout ---------- */
+#app{position:relative; z-index:1; max-width:1000px; margin:0 auto; padding:18px 18px 40px}
+header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px}
+.brand{display:flex; align-items:baseline; gap:10px}
+.brand h1{font-family:var(--display); font-weight:600; font-size:clamp(22px,4.5vw,32px); margin:0; letter-spacing:.2px}
+.brand span{font-size:13px; color:var(--snow-dim); font-weight:700}
+.chips{display:flex; gap:8px; align-items:center}
+.chip{
+  background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.14);
+  border-radius:999px; padding:7px 13px; font-weight:800; font-size:14px; white-space:nowrap;
+}
+.chip b{font-family:var(--display); font-size:17px; color:var(--lit)}
+.chip.flame{transition:transform .2s}
+.chip.flame.pop{transform:scale(1.18)}
+.iconbtn{
+  background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.14); color:var(--snow);
+  width:40px; height:40px; border-radius:12px; font-size:17px; cursor:pointer; line-height:1;
+}
+.iconbtn:hover{background:rgba(255,255,255,.17)}
+
+main{display:grid; grid-template-columns:300px 1fr; gap:26px; align-items:start; margin-top:14px}
+@media (max-width:760px){
+  main{grid-template-columns:1fr; gap:14px}
+  .stage{order:2}
+}
+
+/* ---------- house ---------- */
+.stage{display:flex; flex-direction:column; align-items:center}
+.house{width:250px; position:relative; filter:drop-shadow(0 22px 30px rgba(0,0,0,.45))}
+@media (max-width:760px){.house{width:200px}}
+.chimney{position:absolute; right:44px; top:6px; width:26px; height:46px; background:var(--wall-dark); border-radius:4px 4px 0 0; z-index:0}
+.roof{
+  position:relative; z-index:1; height:96px; background:var(--roof);
+  clip-path:polygon(50% 0,100% 100%,0 100%);
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.roof-num{
+  font-family:var(--display); font-weight:700; font-size:34px; color:var(--snow);
+  margin-bottom:8px; text-shadow:0 0 18px rgba(255,255,255,.25);
+}
+.walls{
+  background:linear-gradient(180deg,var(--wall-light),var(--wall) 45%,var(--wall-dark));
+  padding:14px 16px 8px; border-radius:0 0 6px 6px;
+}
+.floor{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px; position:relative}
+.win{
+  position:relative; aspect-ratio:1/.86; border-radius:5px; background:var(--glass-off);
+  border:3px solid rgba(244,231,210,.55); display:flex; align-items:center; justify-content:center;
+  font-family:var(--display); font-weight:700; font-size:22px; color:transparent;
+  transition:background .5s ease, color .4s ease, border-color .5s ease, box-shadow .6s ease;
+}
+.win::before,.win::after{content:""; position:absolute; background:rgba(244,231,210,.5); transition:background .5s}
+.win::before{left:50%; top:0; bottom:0; width:3px; transform:translateX(-50%)}
+.win::after{top:50%; left:0; right:0; height:3px; transform:translateY(-50%)}
+.floor.hint .win{color:rgba(244,231,210,.30)}
+.floor.lit .win{
+  background:radial-gradient(circle at 50% 45%, var(--lit-soft), var(--lit) 70%);
+  color:#6B3410; border-color:var(--frame);
+  box-shadow:0 0 22px 4px rgba(255,194,74,.55), 0 0 60px 14px rgba(255,194,74,.18);
+  animation:switchOn .55s ease-out;
+}
+.floor.lit .win:last-child{animation-delay:.14s; animation-fill-mode:backwards}
+.floor.lit .win::before,.floor.lit .win::after{background:rgba(160,80,20,.45)}
+@keyframes switchOn{
+  0%{background:var(--glass-off); box-shadow:none; transform:scale(1)}
+  45%{transform:scale(1.16)}
+  100%{transform:scale(1)}
+}
+.floor.sparkle{animation:nudge .45s ease}
+@keyframes nudge{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
+.door{
+  width:52px; height:60px; margin:2px auto 0; background:#5A2018; border-radius:6px 6px 0 0;
+  border:3px solid rgba(244,231,210,.45); border-bottom:none; position:relative;
+  transition:background .6s, box-shadow .6s;
+}
+.door::after{content:""; position:absolute; right:7px; top:50%; width:6px; height:6px; border-radius:50%; background:rgba(244,231,210,.6)}
+.house.complete .door{background:radial-gradient(circle at 50% 80%, var(--lit-soft), #C2731A); box-shadow:0 0 26px 6px rgba(255,194,74,.5)}
+.ground{width:300px; height:26px; margin-top:-6px; background:var(--snow); border-radius:50%; filter:blur(1px); opacity:.9}
+.caption{margin-top:12px; font-size:13px; color:var(--snow-dim); font-weight:700; text-align:center}
+
+/* ---------- play panel ---------- */
+.play{display:flex; flex-direction:column; gap:14px}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.06));
+  border:1px solid rgba(255,255,255,.16); border-radius:22px; padding:20px 18px;
+  backdrop-filter:blur(6px);
+}
+.qhead{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px}
+.qlabel{font-size:13px; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--snow-dim)}
+.ring{width:38px; height:38px; flex:none}
+.ring circle{fill:none; stroke-width:5; stroke-linecap:round}
+.ring .bg{stroke:rgba(255,255,255,.15)}
+.ring .fg{stroke:var(--lit); stroke-dasharray:100; stroke-dashoffset:0; transform:rotate(-90deg); transform-origin:50% 50%}
+.ring.run .fg{animation:drain 3s linear forwards}
+@keyframes drain{to{stroke-dashoffset:100}}
+
+#question{
+  font-family:var(--display); font-weight:600; text-align:center;
+  font-size:clamp(34px,9vw,54px); letter-spacing:1px; padding:6px 0 2px; line-height:1.15;
+}
+#question .blank{
+  display:inline-block; min-width:1.5em; border-bottom:5px solid var(--lit);
+  color:var(--lit); border-radius:3px;
+}
+#question .blank.filled{border-bottom-color:transparent}
+.card.wrong{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}50%{transform:translateX(8px)}80%{transform:translateX(-4px)}}
+.card.right{animation:bounce .4s}
+@keyframes bounce{0%,100%{transform:scale(1)}45%{transform:scale(1.045)}}
+
+/* ten-frame */
+.frame10{display:grid; grid-template-columns:repeat(5,1fr); gap:7px; max-width:260px; margin:14px auto 0;
+  opacity:0; max-height:0; overflow:hidden; transition:opacity .35s, max-height .35s}
+.frame10.show{opacity:1; max-height:130px}
+.dot{aspect-ratio:1; border-radius:50%; border:2.5px solid rgba(255,255,255,.3); background:transparent}
+.dot.full{background:var(--snow); border-color:var(--snow)}
+.dot.need{border-color:var(--lit); background:rgba(255,194,74,.22); animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+
+/* keypad */
+.pad{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+.key{
+  font-family:var(--display); font-weight:600; font-size:clamp(24px,6vw,32px);
+  padding:14px 0; border-radius:16px; cursor:pointer; color:var(--ink);
+  background:linear-gradient(180deg,#FFFDF7,#EBDFC9); border:none;
+  box-shadow:0 5px 0 #B9A98F, 0 8px 14px rgba(0,0,0,.3); transition:transform .08s, box-shadow .08s;
+}
+.key:active,.key.press{transform:translateY(4px); box-shadow:0 1px 0 #B9A98F, 0 3px 8px rgba(0,0,0,.3)}
+.key:disabled{opacity:.45; cursor:default}
+.key.good{background:linear-gradient(180deg,#B8F5C8,#6FD98F); box-shadow:0 5px 0 #3E9B5C}
+.key.bad{background:linear-gradient(180deg,#FFC9C2,#F08A7C); box-shadow:0 5px 0 #B4544A}
+button:focus-visible,.key:focus-visible{outline:3px solid var(--aurora-2); outline-offset:3px}
+
+.tools{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+.tool{
+  background:rgba(255,255,255,.09); border:1px solid rgba(255,255,255,.16); color:var(--snow);
+  border-radius:999px; padding:9px 16px; font-family:var(--body); font-weight:800; font-size:13.5px; cursor:pointer;
+}
+.tool:hover{background:rgba(255,255,255,.18)}
+.tool.on{background:var(--lit); color:var(--ink); border-color:var(--lit)}
+#feedback{min-height:26px; text-align:center; font-weight:800; font-size:16px; color:var(--lit-soft)}
+
+/* floating points */
+.float{position:fixed; font-family:var(--display); font-weight:700; font-size:26px; color:var(--lit);
+  pointer-events:none; z-index:40; animation:rise 1.1s ease-out forwards; text-shadow:0 2px 10px rgba(0,0,0,.5)}
+@keyframes rise{0%{opacity:1;transform:translateY(0) scale(.7)}30%{transform:translateY(-16px) scale(1.15)}100%{opacity:0;transform:translateY(-72px) scale(1)}}
+.spark{position:fixed; width:9px; height:9px; border-radius:50%; background:var(--lit); pointer-events:none; z-index:40;
+  animation:burst .85s ease-out forwards}
+@keyframes burst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+
+/* end screen */
+#end{position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:20px;
+  background:rgba(8,20,36,.82); backdrop-filter:blur(7px)}
+#end.show{display:flex; animation:fadein .4s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.endcard{
+  background:linear-gradient(180deg,#23486E,#152F4C); border:1px solid rgba(255,255,255,.2);
+  border-radius:26px; padding:28px 26px; text-align:center; max-width:400px; width:100%;
+  box-shadow:0 26px 60px rgba(0,0,0,.5); animation:pop .5s cubic-bezier(.2,1.4,.4,1)
+}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.endcard h2{font-family:var(--display); font-weight:600; font-size:28px; margin:0 0 4px}
+.stars{font-size:42px; letter-spacing:6px; margin:10px 0 6px}
+.stars span{display:inline-block; opacity:.22; transform:scale(.7); transition:all .4s}
+.stars span.on{opacity:1; transform:scale(1); filter:drop-shadow(0 0 12px rgba(255,194,74,.8))}
+.stats{display:flex; justify-content:center; gap:22px; margin:16px 0 20px; flex-wrap:wrap}
+.stat b{display:block; font-family:var(--display); font-size:26px; color:var(--lit)}
+.stat span{font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--snow-dim)}
+.big{
+  font-family:var(--display); font-weight:600; font-size:20px; padding:14px 30px; border-radius:16px; cursor:pointer;
+  background:linear-gradient(180deg,#FFD26E,#F2A72E); color:#4A2A05; border:none; box-shadow:0 5px 0 #B87A16;
+}
+.big:active{transform:translateY(4px); box-shadow:0 1px 0 #B87A16}
+#record{font-size:13.5px; font-weight:800; color:var(--snow-dim); margin-top:14px}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.05s !important}
+  .flake{display:none}
+}
+</style>
+
+<div id="sky">
+  <div id="aurora"><div class="band b1"></div><div class="band b2"></div><div class="band b3"></div></div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <h1>The house of 10</h1>
+      <span>for Nam</span>
+    </div>
+    <div class="chips">
+      <div class="chip">Points <b id="score">0</b></div>
+      <div class="chip flame" id="streakChip">🔥 <b id="streak">0</b></div>
+      <div class="chip">Question <b id="qnum">1</b>/10</div>
+      <button class="iconbtn" id="sound" title="Sound">🔊</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage">
+      <div class="house" id="house">
+        <div class="chimney"></div>
+        <div class="roof"><div class="roof-num">10</div></div>
+        <div class="walls" id="walls"></div>
+        <div class="door"></div>
+      </div>
+      <div class="ground"></div>
+      <p class="caption">Every right pair lights up a floor.<br>Five floors lit = a house full of light.</p>
+    </section>
+
+    <section class="play">
+      <div class="card" id="qcard">
+        <div class="qhead">
+          <div class="qlabel">How many more to make 10?</div>
+          <svg class="ring" id="ring" viewBox="0 0 40 40" aria-hidden="true">
+            <circle class="bg" cx="20" cy="20" r="16"></circle>
+            <circle class="fg" cx="20" cy="20" r="16" pathLength="100"></circle>
+          </svg>
+        </div>
+        <div id="question"></div>
+        <div class="frame10" id="frame10"></div>
+      </div>
+
+      <div id="feedback"></div>
+
+      <div class="pad" id="pad"></div>
+
+      <div class="tools">
+        <button class="tool" id="helpBtn">💡 Show the dots</button>
+        <button class="tool" id="hintBtn">🏠 Numbers on the house</button>
+        <button class="tool" id="restartBtn">↻ Start again</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="end">
+  <div class="endcard">
+    <h2 id="endTitle">Well done, Nam!</h2>
+    <p id="endMsg" style="color:var(--snow-dim);font-weight:700;margin:0"></p>
+    <div class="stars" id="starRow"><span>★</span><span>★</span><span>★</span></div>
+    <div class="stats">
+      <div class="stat"><b id="fCorrect">0</b><span>right</span></div>
+      <div class="stat"><b id="fScore">0</b><span>points</span></div>
+      <div class="stat"><b id="fFast">0</b><span>flashes ⚡</span></div>
+    </div>
+    <button class="big" id="againBtn">Play again</button>
+    <div id="record"></div>
+  </div>
+</div>
+
+<script>
+const PAIRS=[[1,9],[2,8],[3,7],[4,6],[5,5]];
+const QTOTAL=10, FAST_MS=3000;
+
+/* ---------- build house ---------- */
+const walls=document.getElementById('walls');
+PAIRS.forEach(([a,b],i)=>{
+  const f=document.createElement('div');
+  f.className='floor'; f.dataset.i=i;
+  f.innerHTML=`<div class="win">${a}</div><div class="win">${b}</div>`;
+  walls.appendChild(f);
+});
+const floors=[...document.querySelectorAll('.floor')];
+
+/* ---------- build keypad ---------- */
+const pad=document.getElementById('pad');
+for(let n=1;n<=9;n++){
+  const b=document.createElement('button');
+  b.className='key'; b.textContent=n; b.dataset.n=n;
+  b.addEventListener('click',()=>answer(n,b));
+  pad.appendChild(b);
+}
+const keys=[...document.querySelectorAll('.key')];
+
+/* ---------- snow ---------- */
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const sky=document.getElementById('sky');
+  for(let i=0;i<28;i++){
+    const f=document.createElement('div');
+    f.className='flake'; f.textContent='❄';
+    f.style.left=Math.random()*100+'%';
+    f.style.fontSize=(7+Math.random()*11)+'px';
+    f.style.animationDuration=(9+Math.random()*11)+'s';
+    f.style.animationDelay=(-Math.random()*18)+'s';
+    f.style.setProperty('--drift',(Math.random()*70-35)+'px');
+    sky.appendChild(f);
+  }
+}
+
+/* ---------- sound ---------- */
+let soundOn=true, actx=null;
+function tone(freq,dur=.14,type='sine',vol=.16,delay=0){
+  if(!soundOn) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime+delay;
+    o.type=type; o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.05);
+  }catch(e){}
+}
+document.getElementById('sound').addEventListener('click',e=>{
+  soundOn=!soundOn; e.currentTarget.textContent=soundOn?'🔊':'🔇'; if(soundOn) tone(880,.1);
+});
+
+/* ---------- state ---------- */
+let queue=[], cur=null, idx=0, score=0, streak=0, best=0, correct=0, fast=0, tries=0, qStart=0, locked=false;
+let helpOn=false, hintOn=false, record=null;
+
+const $=id=>document.getElementById(id);
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function buildQueue(){
+  const pool=shuffle([1,2,3,4,5,6,7,8,9]);
+  pool.push(pool[Math.floor(Math.random()*9)]);
+  const forms=['a','b','c','d'];
+  return shuffle(pool).map(n=>({n, ans:10-n, form:forms[Math.floor(Math.random()*forms.length)]}));
+}
+
+function render(q){
+  const blank='<span class="blank" id="bl">?</span>';
+  const map={
+    a:`${q.n} + ${blank} = 10`,
+    b:`${blank} + ${q.n} = 10`,
+    c:`10 − ${q.n} = ${blank}`,
+    d:`${q.n} <span style="opacity:.5">→</span> ${blank} <span style="opacity:.5">→</span> 10`
+  };
+  $('question').innerHTML=map[q.form];
+  const labels={a:'How many more to make 10?',b:'Who lives in the other room?',c:'Count up from '+q.n+' to 10',d:'From '+q.n+', how many more to 10?'};
+  document.querySelector('.qlabel').textContent=labels[q.form];
+}
+
+function drawFrame(n,revealed){
+  const f=$('frame10'); f.innerHTML='';
+  for(let i=0;i<10;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i<n?' full':(revealed?' need':''));
+    f.appendChild(d);
+  }
+}
+
+function nextQuestion(){
+  if(idx>=QTOTAL){ finish(); return; }
+  cur=queue[idx]; tries=0; locked=false;
+  $('qnum').textContent=idx+1;
+  render(cur);
+  drawFrame(cur.n,false);
+  $('frame10').classList.toggle('show',helpOn);
+  keys.forEach(k=>{k.disabled=false; k.classList.remove('good','bad');});
+  $('feedback').textContent='';
+  const ring=$('ring'); ring.classList.remove('run'); void ring.offsetWidth; ring.classList.add('run');
+  qStart=performance.now();
+}
+
+function answer(n,btn){
+  if(locked||!cur) return;
+  if(n===cur.ans){
+    locked=true;
+    const ms=performance.now()-qStart;
+    const isFast = ms<FAST_MS && tries===0;
+    btn.classList.add('good');
+    keys.forEach(k=>k.disabled=true);
+    $('ring').classList.remove('run');
+    $('bl').textContent=n; $('bl').classList.add('filled');
+    $('qcard').classList.add('right'); setTimeout(()=>$('qcard').classList.remove('right'),400);
+
+    let pts=10; if(isFast){pts+=5; fast++;}
+    if(tries===0){correct++; streak++; best=Math.max(best,streak);} else {streak=0;}
+    score+=pts;
+    $('score').textContent=score; $('streak').textContent=streak;
+    $('streakChip').classList.add('pop'); setTimeout(()=>$('streakChip').classList.remove('pop'),200);
+
+    floatPts(btn,'+'+pts+(isFast?' ⚡':''));
+    sparks(btn);
+    tone(660,.12,'triangle'); tone(880,.18,'triangle',.15,.09);
+    if(isFast) tone(1320,.14,'sine',.1,.2);
+
+    lightFloor(Math.min(cur.n,cur.ans)-1);
+    $('feedback').textContent = isFast ? 'Flash! ⚡' : ['Yes!','Perfect!','Spot on!','Brilliant!'][Math.floor(Math.random()*4)];
+
+    idx++;
+    setTimeout(nextQuestion,1050);
+  } else {
+    tries++;
+    btn.classList.add('bad'); btn.disabled=true;
+    streak=0; $('streak').textContent=0;
+    $('qcard').classList.add('wrong'); setTimeout(()=>$('qcard').classList.remove('wrong'),400);
+    tone(180,.2,'sawtooth',.1);
+    drawFrame(cur.n,true);
+    $('frame10').classList.add('show');
+    $('feedback').textContent=`Look at the dots: ${cur.n} full, count the empty ones.`;
+  }
+}
+
+function lightFloor(i){
+  const f=floors[i];
+  if(!f) return;
+  if(!f.classList.contains('lit')){
+    f.classList.add('lit');
+    tone(1046,.5,'sine',.09,.15);
+    if(floors.every(x=>x.classList.contains('lit'))) allLit();
+  } else {
+    f.classList.add('sparkle'); setTimeout(()=>f.classList.remove('sparkle'),450);
+  }
+}
+
+function allLit(){
+  $('house').classList.add('complete');
+  $('aurora').classList.add('on');
+  [523,659,784,1046].forEach((f,i)=>tone(f,.4,'sine',.11,.12*i));
+}
+
+function floatPts(el,txt){
+  const r=el.getBoundingClientRect();
+  const d=document.createElement('div');
+  d.className='float'; d.textContent=txt;
+  d.style.left=(r.left+r.width/2-20)+'px'; d.style.top=(r.top-6)+'px';
+  document.body.appendChild(d); setTimeout(()=>d.remove(),1150);
+}
+function sparks(el){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r=el.getBoundingClientRect();
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div');
+    s.className='spark';
+    s.style.left=(r.left+r.width/2)+'px'; s.style.top=(r.top+r.height/2)+'px';
+    const a=Math.random()*Math.PI*2, dist=45+Math.random()*55;
+    s.style.setProperty('--dx',Math.cos(a)*dist+'px');
+    s.style.setProperty('--dy',Math.sin(a)*dist+'px');
+    if(i%3===0) s.style.background='#FFF3D0';
+    document.body.appendChild(s); setTimeout(()=>s.remove(),900);
+  }
+}
+
+/* ---------- end ---------- */
+function finish(){
+  const stars = correct>=10?3 : correct>=8?2 : 1;
+  $('fCorrect').textContent=correct+'/10';
+  $('fScore').textContent=score;
+  $('fFast').textContent=fast;
+  $('endTitle').textContent = stars===3?'The whole house is lit! 🌟' : stars===2?'Well done, Nam!' : 'Nice work!';
+  $('endMsg').textContent = stars===3?'You know the five pairs by heart.' : 'One more round and you will know them all.';
+  const row=$('starRow').children;
+  [...row].forEach(s=>s.classList.remove('on'));
+  for(let i=0;i<stars;i++) setTimeout(()=>{row[i].classList.add('on'); tone(700+i*200,.25,'triangle',.13);},400+i*280);
+  $('end').classList.add('show');
+  saveRecord();
+}
+
+async function saveRecord(){
+  let prev=null;
+  try{
+    const r=await window.storage.get('casa10:record:en');
+    prev=r? JSON.parse(r.value):null;
+  }catch(e){ prev=record; }
+  const isBest=!prev||score>prev.score;
+  if(isBest){
+    record={score,correct,fast,date:new Date().toLocaleDateString('en-GB')};
+    try{ await window.storage.set('casa10:record:en',JSON.stringify(record)); }catch(e){}
+    $('record').textContent='🏆 New personal best!';
+  } else {
+    record=prev;
+    $('record').textContent='Best: '+prev.score+' points ('+prev.date+')';
+  }
+}
+
+function reset(){
+  queue=buildQueue(); idx=0; score=0; streak=0; best=0; correct=0; fast=0;
+  $('score').textContent=0; $('streak').textContent=0;
+  floors.forEach(f=>f.classList.remove('lit','sparkle'));
+  $('house').classList.remove('complete');
+  $('aurora').classList.remove('on');
+  $('end').classList.remove('show');
+  nextQuestion();
+}
+
+/* ---------- controls ---------- */
+$('helpBtn').addEventListener('click',e=>{
+  helpOn=!helpOn; e.currentTarget.classList.toggle('on',helpOn);
+  $('frame10').classList.toggle('show',helpOn);
+});
+$('hintBtn').addEventListener('click',e=>{
+  hintOn=!hintOn; e.currentTarget.classList.toggle('on',hintOn);
+  floors.forEach(f=>f.classList.toggle('hint',hintOn));
+});
+$('restartBtn').addEventListener('click',reset);
+$('againBtn').addEventListener('click',reset);
+
+document.addEventListener('keydown',e=>{
+  const n=parseInt(e.key,10);
+  if(n>=1&&n<=9){
+    const b=keys[n-1];
+    if(!b.disabled){ b.classList.add('press'); setTimeout(()=>b.classList.remove('press'),100); answer(n,b); }
+  }
+});
+
+reset();
+</script>
